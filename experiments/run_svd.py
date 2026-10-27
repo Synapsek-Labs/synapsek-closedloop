@@ -34,7 +34,7 @@ def load_model(name):
 
 
 @torch.no_grad()
-def pot_consensus(model, tok, question: str, max_new=512) -> float | None:
+def pot_consensus(model, tok, question: str, max_new=768) -> float | None:
     """2 independent PoT programs; return their answer if both agree, else None."""
     import subprocess, tempfile
     prompt = ("Solve this with short straight-line Python code: no functions, no classes, "
