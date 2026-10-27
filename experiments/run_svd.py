@@ -37,13 +37,16 @@ def load_model(name):
 def pot_consensus(model, tok, question: str, max_new=512) -> float | None:
     """2 independent PoT programs; return their answer if both agree, else None."""
     import subprocess, tempfile
-    prompt = ("Write a short Python program that solves the problem and prints exactly one "
-              "number (the final answer).\n\nProblem: " + question + "\n\n```python\n")
+    prompt = ("Solve this with short straight-line Python code: no functions, no classes, "
+              "no docstrings, no comments. Compute the answer step by step in plain "
+              "variables, and the LAST line must be exactly: print(answer)\n\n"
+              "Problem: " + question + "\n\n```python\n")
     codes = _gen(model, tok, [prompt, prompt], max_new)
     progs = []
+    import re as _re
     for t in codes:
         c = _extract_code(t)
-        if c:
+        if c and _re.search(r"print\s*\(", c):
             progs.append(c)
     if len(progs) < 2:
         return None
