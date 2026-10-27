@@ -128,7 +128,8 @@ def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
         results = {}
         try:
             for item in _json.load(open(cout, encoding="utf-8")):
-                results.setdefault(item["cand"], {})[item["sample"]] = item
+                key = item.get("idx", item.get("cand"))
+                results.setdefault(key, {})[item.get("sample", 0)] = item
         except Exception as e:
             print(f"[synth] pot_runner results unreadable: {e!r} "
                   f"(n_codes={len(all_codes)})")

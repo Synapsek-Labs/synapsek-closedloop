@@ -39,8 +39,10 @@ def main():
     codes = json.loads(open(sys.argv[1], encoding="utf-8").read())
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
         results = list(pool.map(
-            lambda item: (item.get("idx", item.get("cand")), run_one(item["code"])), codes))
-    json.dump([{"idx": idx, "ok": ok, "number": num} for idx, (ok, num) in results],
+            lambda item: (item.get("idx", item.get("cand")),
+                          item.get("sample", 0), run_one(item["code"])), codes))
+    json.dump([{"idx": idx, "sample": smp, "ok": ok, "number": num}
+               for idx, smp, (ok, num) in results],
               open(sys.argv[2], "w", encoding="utf-8"))
 
 
