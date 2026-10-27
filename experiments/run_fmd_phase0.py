@@ -75,7 +75,9 @@ def stage2(max_wrong=600, seed=17):
     f = OUT / "labeled.jsonl"
     if f.exists():
         print("[stage2] labels exist, skipping"); return
-    rows = [json.loads(l) for l in (OUT / "traces.jsonl").read_text().splitlines() if l.strip()]
+    src = OUT / ("traces_greedy.jsonl" if (OUT / "traces_greedy.jsonl").exists()
+                 else "traces.jsonl")
+    rows = [json.loads(l) for l in src.read_text().splitlines() if l.strip()]
     wrong = [r for r in rows if not r["correct"]]
     rng = random.Random(seed); rng.shuffle(wrong)
     wrong = wrong[:max_wrong]
