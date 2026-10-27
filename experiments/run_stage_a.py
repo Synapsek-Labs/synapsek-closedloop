@@ -23,6 +23,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", default="configs/tier0_stage_a.yaml")
     ap.add_argument("--seed", type=int, default=17)
+    ap.add_argument("--battery-size", type=int, default=400,
+                    help="held-out battery size for non-smoke runs (size change triggers a fresh frozen battery)")
     ap.add_argument("--arm", choices=["static", "loop", "both"], default="both")
     ap.add_argument("--smoke", action="store_true", help="tiny sizes; verifies pipeline end-to-end")
     args = ap.parse_args()
@@ -39,14 +41,16 @@ def main():
 
     # --- battery: build if absent; for REAL runs, require the full-size battery ---
     manifest_path = Path(cfg["data"]["held_out_battery"]).with_suffix(".manifest.json")
-    full_n = 40 if args.smoke else 400
+    full_n = 40 if args.smoke else args.battery_size
     need_build = not manifest_path.exists()
     if not need_build:
         m = json.loads(manifest_path.read_text())
-        need_build = m["n_held_out"] != full_n   # smoke battery must not freeze the real run
+        need_build = m["n_held_out"] != full_n   # battery size change = fresh frozen battery
     if need_build:
         print("building battery (first run or size mismatch)...")
-        manifest = battery.build(n_held_out=full_n, n_pool=60 if args.smoke else 5000, seed=0)
+        manifest = battery.build(n_held_out=full_n,
+                                 n_pool=60 if args.smoke else cfg["data"].get("n_pool", 5000),
+                                 seed=0)
         print(json.dumps(manifest, indent=2))
     else:
         assert battery.verify_frozen(cfg["data"]["held_out_battery"]) == \

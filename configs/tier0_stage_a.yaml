@@ -10,6 +10,7 @@ data:
   train_pool: gsm8k           # openai/gsm8k, main config, train split (7473 problems)
   held_out_battery: probes/battery_held_out.jsonl   # frozen BEFORE any run
   probe_pool: probes/pool_train.jsonl               # training pool w/ per-problem metadata
+  n_pool: 7473                                      # full GSM8K train split (powered round)
   max_len_tokens: 1024
 
 budget:
