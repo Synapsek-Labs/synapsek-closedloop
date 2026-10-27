@@ -124,7 +124,7 @@ def main():
             if args.loop_mode == "synth" and cycle > 0:
                 from src.loop.synthesizer import synthesize
                 new_probs = synthesize(synth_model, synth_tok, failed_for_synth,
-                                       per_failed=1,
+                                       per_failed=cfg["loop_arm"].get("per_failed", 1),
                                        max_new=cfg["eval"]["max_new_tokens"],
                                        python_exe=sys.executable)
                 synth_bank.extend(new_probs)

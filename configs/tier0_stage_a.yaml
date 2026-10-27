@@ -26,6 +26,7 @@ loop_arm:
   probe_subset_per_cycle: 300          # problems probed to estimate cluster difficulty
   buckets: 5                           # difficulty buckets by solve rate
   selection: weak_bucket_heavy         # oversample low-solve-rate buckets
+  per_failed: 4                        # synth variants per failed probe (Tier-0c dose)
 
 static_arm:
   selection: uniform                   # fixed random slice, chosen ONCE up-front
