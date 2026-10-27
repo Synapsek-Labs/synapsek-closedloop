@@ -19,7 +19,9 @@ most of their compute on data the model already knows. We invert this:
    training data, at pretraining *and* post-training scale.
 3. **Failure-first data** — annotated first-mistake trajectories (FMD head) and
    detection-guided rollout forking (ForkRL) convert wasted failed rollouts into
-   verifiable learning signal.
+   verifiable learning signal. *(Related/concurrent: ELPO, belief-shift branching,
+   PivotOPD — see docs/prior_art.md; our delta is the trained, deployment-reusable
+   detector and pretraining-scale integration.)*
 4. **Learning Nodes** — small open models (BitNet-class) that improve nightly from
    verified experience on user hardware, with verification-gated federated merging.
 
