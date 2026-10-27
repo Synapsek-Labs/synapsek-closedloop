@@ -30,6 +30,19 @@ def load_policy(model_name: str, load_in_4bit: bool, dtype=torch.bfloat16):
     return tok, get_peft_model(model, lora)
 
 
+def load_base(model_name: str, load_in_4bit: bool, dtype=torch.bfloat16):
+    """Pristine instruct model (no LoRA) — used as synthesizer/verifier so synthesis
+    quality doesn't drift with policy training."""
+    from transformers import BitsAndBytesConfig
+    tok = AutoTokenizer.from_pretrained(model_name)
+    quant = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=dtype,
+                               bnb_4bit_quant_type="nf4") if load_in_4bit else None
+    model = AutoModelForCausalLM.from_pretrained(model_name, quantization_config=quant,
+                                                 dtype=dtype, device_map="cuda:0")
+    model.eval()
+    return tok, model
+
+
 def make_batch(tok, problems: list[dict], max_len: int, device="cuda:0"):
     """problems: [{question, answer}] -> input_ids/labels tensors (+ true token count)."""
     tok_pad = tok.pad_token_id or tok.eos_token_id

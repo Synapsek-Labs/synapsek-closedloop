@@ -99,6 +99,10 @@ def main():
             # static arm trained on the loaded weights; loop arm must start fresh
             del model; torch.cuda.empty_cache()
             tok, model = load_policy(cfg["model"]["name"], cfg["model"]["load_in_4bit"])
+        if args.loop_mode == "synth":
+            from src.loop.train_arm import load_base
+            synth_tok, synth_model = load_base(cfg["model"]["name"],
+                                               cfg["model"]["load_in_4bit"])
 
         budget_left = cfg["budget"]["total_tokens_per_arm"]
         difficulty = None
@@ -119,7 +123,8 @@ def main():
             n_slice = min(budget_left // est_tokens, len(pool) // cfg["loop_arm"]["cycles"])
             if args.loop_mode == "synth" and cycle > 0:
                 from src.loop.synthesizer import synthesize
-                new_probs = synthesize(model, tok, failed_for_synth, per_failed=1,
+                new_probs = synthesize(synth_model, synth_tok, failed_for_synth,
+                                       per_failed=1,
                                        max_new=cfg["eval"]["max_new_tokens"],
                                        python_exe=sys.executable)
                 synth_bank.extend(new_probs)
