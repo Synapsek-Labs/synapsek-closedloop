@@ -64,14 +64,20 @@ def _extract_code(text: str) -> str:
     return code if ("print" in code and len(code) < 2000) else ""
 
 
-def _gen(model, tok, prompts: list[str], max_new: int, temperature: float = 0.7):
+def _gen(model, tok, prompts: list[str], max_new: int, temperature: float = 0.7,
+         batch: int = 32):
+    """Batched generation; batch 32 keeps the 5090's decode engine fed (VRAM has room)."""
     device = "cuda:0"
-    enc = tok(prompts, return_tensors="pt", padding=True, padding_side="left").to(device)
-    out = model.generate(**enc, max_new_tokens=max_new, do_sample=True,
-                         temperature=temperature, top_p=0.95,
-                         pad_token_id=tok.pad_token_id or tok.eos_token_id)
-    return [tok.decode(o[enc["input_ids"].shape[1]:], skip_special_tokens=True)
-            for o in out]
+    outs = []
+    for s in range(0, len(prompts), batch):
+        enc = tok(prompts[s:s + batch], return_tensors="pt", padding=True,
+                  padding_side="left").to(device)
+        out = model.generate(**enc, max_new_tokens=max_new, do_sample=True,
+                             temperature=temperature, top_p=0.95,
+                             pad_token_id=tok.pad_token_id or tok.eos_token_id)
+        outs.extend(tok.decode(o[enc["input_ids"].shape[1]:], skip_special_tokens=True)
+                    for o in out)
+    return outs
 
 
 def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
@@ -90,26 +96,23 @@ def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
                for p in failed_problems for _ in range(per_failed)]
     sources = [p["id"] for p in failed_problems for _ in range(per_failed)]
     candidates = []
-    B = 8
-    for s in range(0, len(prompts), B):
-        texts = _gen(model, tok, prompts[s:s + B], max_new)
-        for j, raw in enumerate(texts):
-            q = _clean(raw)
-            if len(q) > 40 and q.endswith("?") and has_numeric_answer(q):
-                candidates.append({"question": q, "source": sources[s + j]})
+    synth_max_new = min(max_new, 256)      # problem statements never need 512 tokens
+    texts = _gen(model, tok, prompts, synth_max_new)
+    for j, raw in enumerate(texts):
+        q = _clean(raw)
+        if len(q) > 40 and q.endswith("?") and has_numeric_answer(q):
+            candidates.append({"question": q, "source": sources[j]})
 
     # --- stage 2: program-of-thought verification via ONE batch-executor process ---
     all_codes = []
-    Bv = 8
-    for s in range(0, len(candidates), Bv):
-        chunk = candidates[s:s + Bv]
-        pot_prompts = [POT_PROMPT.format(q=c["question"]) for c in chunk for _ in range(2)]
-        codes = _gen(model, tok, pot_prompts, max_new)
-        for j, c in enumerate(chunk):
-            for v in range(2):
-                code = _extract_code(codes[j * 2 + v])
-                if code:
-                    all_codes.append({"cand": s + j, "sample": v, "code": code})
+    pot_prompts = [POT_PROMPT.format(q=c["question"]) for c in candidates for _ in range(2)]
+    pot_sources = [i for i in range(len(candidates)) for _ in range(2)]
+    codes = _gen(model, tok, pot_prompts, max_new)
+    for j, c in enumerate(candidates):
+        for v in range(2):
+            code = _extract_code(codes[j * 2 + v])
+            if code:
+                all_codes.append({"cand": j, "sample": v, "code": code})
 
     exe = python_exe or sys.executable or "python"
     verified = []
