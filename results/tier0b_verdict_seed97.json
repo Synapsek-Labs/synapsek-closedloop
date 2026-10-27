@@ -1,0 +1,16 @@
+{
+  "seed": 97,
+  "static": {
+    "held_out_accuracy": 0.114,
+    "tokens_trained": 575168,
+    "wall_hours": 0.04,
+    "mean_loss": 1.0683984880141395
+  },
+  "loop": {
+    "held_out_accuracy": 0.111,
+    "tokens_trained": 575293,
+    "wall_hours": 0.05,
+    "cycles": 3
+  },
+  "delta": -0.0030000000000000027
+}
