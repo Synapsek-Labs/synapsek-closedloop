@@ -7,7 +7,7 @@ results.json: [{"idx": int, "ok": bool, "number": float|null}]
 """
 from __future__ import annotations
 import json, re, sys, threading, io, contextlib
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 TIMEOUT_S = 10
 WORKERS = 32
@@ -37,13 +37,21 @@ def run_one(code: str) -> tuple[bool, float | None]:
 
 def main():
     codes = json.loads(open(sys.argv[1], encoding="utf-8").read())
+    out_f = open(sys.argv[2], "w", encoding="utf-8")   # incremental: survives timeouts
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        results = list(pool.map(
-            lambda item: (item.get("idx", item.get("cand")),
-                          item.get("sample", 0), run_one(item["code"])), codes))
-    json.dump([{"idx": idx, "sample": smp, "ok": ok, "number": num}
-               for idx, smp, (ok, num) in results],
-              open(sys.argv[2], "w", encoding="utf-8"))
+        futures = {pool.submit(run_one, it["code"]):
+                   (it.get("idx", it.get("cand")), it.get("sample", 0))
+                   for it in codes}
+        for fut in as_completed(futures):
+            idx, smp = futures[fut]
+            try:
+                ok, num = fut.result(timeout=TIMEOUT_S + 2)
+            except Exception:
+                ok, num = False, None
+            out_f.write(json.dumps({"idx": idx, "sample": smp,
+                                    "ok": ok, "number": num}) + "\n")
+            out_f.flush()
+    out_f.close()
 
 
 if __name__ == "__main__":

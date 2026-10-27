@@ -55,13 +55,22 @@ def has_numeric_answer(q: str) -> bool:
     return extract_last_number(q) is not None
 
 
+_HANG_PATTERNS = ("input(", "while True", "while 1", "sleep(", "stdin",
+                  "readline", "input ()")
+
+
 def _extract_code(text: str) -> str:
     m = re.search(r"```(?:python)?\s*(.*?)```", text, re.S)
     code = m.group(1) if m else text
     lines = [l for l in code.strip().splitlines()
              if not re.match(r"^(sure|here|this|note|i'll|let's)\b", l, re.I)]
     code = "\n".join(lines).strip()
-    return code if ("print" in code and len(code) < 2000) else ""
+    if not ("print" in code and len(code) < 2000):
+        return ""
+    low = code.lower()
+    if any(p in low for p in _HANG_PATTERNS):
+        return ""                      # static hang filter: input()/infinite loops etc.
+    return code
 
 
 def _gen(model, tok, prompts: list[str], max_new: int, temperature: float = 0.7,
@@ -123,14 +132,26 @@ def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
             _json.dump(all_codes, f); cin = f.name
         cout = cin + ".out"
         runner = Path(__file__).parent / "pot_runner.py"
-        r = subprocess.run([exe, str(runner), cin, cout], capture_output=True,
-                           text=True, timeout=1800, encoding="utf-8", errors="replace")
-        if r.returncode != 0:
-            print(f"[synth] pot_runner FAILED rc={r.returncode} "
-                  f"stderr={r.stderr[-400:]!r}")
+        r = None
+        try:
+            r = subprocess.run([exe, str(runner), cin, cout], capture_output=True,
+                               text=True, timeout=900, encoding="utf-8",
+                               errors="replace")
+            if r.returncode != 0:
+                print(f"[synth] pot_runner FAILED rc={r.returncode} "
+                      f"stderr={r.stderr[-300:]!r}")
+        except subprocess.TimeoutExpired:
+            print("[synth] pot_runner timed out; salvaging partial results")
         results = {}
         try:
-            for item in _json.load(open(cout, encoding="utf-8")):
+            lines = open(cout, encoding="utf-8").read().strip().splitlines()
+            items = []
+            for ln in lines:
+                try:
+                    items.append(_json.loads(ln))
+                except Exception:
+                    pass  # tolerate a torn final line from a timeout kill
+            for item in items:
                 key = item.get("idx", item.get("cand"))
                 results.setdefault(key, {})[item.get("sample", 0)] = item
         except Exception as e:
