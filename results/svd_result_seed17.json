@@ -1,0 +1,8 @@
+{
+  "held_out_acc": 0.489,
+  "n_accepted": 1507,
+  "n_sampled": 6400,
+  "tokens": 449974,
+  "mean_loss": 0.4441659381149938,
+  "seed": 17
+}

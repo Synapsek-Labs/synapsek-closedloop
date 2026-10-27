@@ -10,7 +10,7 @@ Stages (each checkpointed to runs/fmd_phase0/ so stages resume):
 Usage: python -m experiments.run_fmd_phase0 [--stage 1|2|3|4] [--n-problems 250] [--n-per 8]
 """
 from __future__ import annotations
-import argparse, json, random, sys
+import argparse, json, os, random, sys
 from pathlib import Path
 
 import torch
@@ -22,7 +22,7 @@ from src.fmd.phase0 import (split_steps, judge_first_mistake, extract_states,
                             train_probe, auroc)
 from src.loop.train_arm import PROMPT
 
-OUT = Path("runs/fmd_phase0")
+OUT = Path(os.environ.get("FMD_OUT", "runs/fmd_phase0"))
 MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
 JUDGE = "Qwen/Qwen2.5-7B-Instruct"
 LAYERS = list(range(8, 25))
@@ -42,9 +42,9 @@ def load_model(name, _cache={}):
 
 
 @torch.no_grad()
-def stage1(n_problems=250, n_per=8, seed=17):
+def stage1(n_problems=250, n_per=8, seed=17, greedy=False):
     OUT.mkdir(parents=True, exist_ok=True)
-    traces_file = OUT / "traces.jsonl"
+    traces_file = OUT / ("traces_greedy.jsonl" if greedy else "traces.jsonl")
     if traces_file.exists():
         print("[stage1] traces exist, skipping"); return
     pool = load("probes/pool_train.jsonl")[:n_problems]
@@ -55,8 +55,8 @@ def stage1(n_problems=250, n_per=8, seed=17):
         chunk = pool[s:s + 8]
         prompts = [PROMPT.format(q=p["question"]) for p in chunk]
         enc = tok(prompts, return_tensors="pt", padding=True, padding_side="left").to("cuda:0")
-        gen = model.generate(**enc, max_new_tokens=512, do_sample=True, temperature=0.7,
-                             top_p=0.95, num_return_sequences=n_per,
+        gen = model.generate(**enc, max_new_tokens=512, do_sample=not greedy,
+                             temperature=0.7, top_p=0.95, num_return_sequences=n_per,
                              pad_token_id=tok.pad_token_id or tok.eos_token_id)
         for j, p in enumerate(chunk):
             for k in range(n_per):
@@ -182,13 +182,23 @@ def stage4():
           f"(trace {a:.3f}, loc_cum {b:.3f}, loc_strict {report['loc_strict']['auroc_mean']:.3f})")
 
 
+def use_greedy_out() -> None:
+    global OUT
+    os.environ["FMD_OUT"] = "runs/fmd_phase0_greedy"
+    OUT = Path("runs/fmd_phase0_greedy")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", type=int, default=0, help="run stages 1..stage (0=all)")
     ap.add_argument("--n-problems", type=int, default=250)
     ap.add_argument("--n-per", type=int, default=8)
+    ap.add_argument("--greedy", action="store_true",
+                    help="greedy traces into runs/fmd_phase0_greedy (registered replication)")
     args = ap.parse_args()
-    stage1(args.n_problems, args.n_per)
+    if args.greedy:
+        use_greedy_out()
+    stage1(args.n_problems, args.n_per, greedy=args.greedy)
     stage2()
-    stage3()
+    stage3(max_traces=args.n_problems * args.n_per)
     stage4()
