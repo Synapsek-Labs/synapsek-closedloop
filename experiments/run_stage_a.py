@@ -75,7 +75,7 @@ def main():
     if args.arm in ("static", "both"):
         t0 = time.time()
         static_ids = selector.select_slice(pool, None,
-                                           cfg["budget"]["total_tokens_per_arm"] // est_tokens,
+                                           len(pool),   # one epoch over the pool = the arm's budget
                                            strategy="uniform", rng=rng)
         by_id = {p["id"]: p for p in pool}
         probs = [by_id[i] for i in static_ids]
@@ -104,7 +104,7 @@ def main():
                 scored = run_battery(model, tok, sub, max_new=cfg["eval"]["max_new_tokens"])
                 difficulty = selector.bucket_by_difficulty(scored, cfg["loop_arm"]["buckets"])
                 print(f"cycle {cycle} probe solve-rate={solve_rate(scored):.3f}")
-            n_slice = min(budget_left // est_tokens, len(pool))
+            n_slice = min(budget_left // est_tokens, len(pool) // cfg["loop_arm"]["cycles"])
             slice_ids = selector.select_slice(pool, difficulty, n_slice,
                                               strategy=cfg["loop_arm"]["selection"], rng=rng)
             probs = [by_id[i] for i in slice_ids]
