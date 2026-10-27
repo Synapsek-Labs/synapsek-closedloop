@@ -8,7 +8,7 @@ evaluate on the frozen held-out battery. Compare vs the Tier-0 static arm.
 Usage: python -m experiments.run_svd [--n-problems 800] [--n-per 8] [--seed 17]
 """
 from __future__ import annotations
-import argparse, json, sys
+import argparse, json, re, sys
 from pathlib import Path
 
 import torch
@@ -17,7 +17,22 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.cartography.battery import load, is_correct, extract_last_number
 from src.loop.train_arm import PROMPT, train_steps, probe as gen_greedy
-from src.loop.synthesizer import _gen, _extract_code
+from src.loop.synthesizer import _gen
+
+import re as _re
+
+
+def _code_of(text: str) -> str:
+    """Robust extraction: continuation may have a closing fence but no opener."""
+    code = text.split("```", 1)[0]          # cut at first closing fence (prompt opened it)
+    lines = [l for l in code.strip().splitlines()
+             if not _re.match(r"^(sure|here|this|note|i'll|let's)\b", l, re.I)]
+    code = "\n".join(lines).strip()
+    if not code or "print(" not in code or len(code) > 3000:
+        return ""
+    if any(p in code.lower() for p in ("input(", "while true", "while 1", "sleep(", "stdin")):
+        return ""
+    return code
 
 OUT = Path("runs/svd")
 MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -43,9 +58,8 @@ def pot_consensus(model, tok, question: str, max_new=768) -> float | None:
               "Problem: " + question + "\n\n```python\n")
     codes = _gen(model, tok, [prompt, prompt], max_new)
     progs = []
-    import re as _re
     for t in codes:
-        c = _extract_code(t)
+        c = _code_of(t)
         if c and _re.search(r"print\s*\(", c):
             progs.append(c)
     if len(progs) < 2:
