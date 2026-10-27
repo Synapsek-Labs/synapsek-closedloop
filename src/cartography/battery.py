@@ -41,6 +41,8 @@ def build(probe_out: str = "probes/battery_held_out.jsonl",
     """Split GSM8K: held-out battery (frozen) + training pool. Writes JSONL + hashes."""
     from datasets import load_dataset
     ds = load_dataset(GSM8K, "main")
+    for p in (probe_out, pool_out):
+        Path(p).parent.mkdir(parents=True, exist_ok=True)
     train = list(ds["train"])
     test = list(ds["test"])
     rng = random.Random(seed)
