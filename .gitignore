@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Training artifacts (never commit weights/data)
+checkpoints/
+runs/
+wandb/
+data/
+*.safetensors
+*.bin
+*.ckpt
+*.pt
+
+# OS
+.DS_Store
