@@ -121,13 +121,17 @@ def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
         cout = cin + ".out"
         runner = Path(__file__).parent / "pot_runner.py"
         r = subprocess.run([exe, str(runner), cin, cout], capture_output=True,
-                           text=True, timeout=600, encoding="utf-8", errors="replace")
+                           text=True, timeout=1800, encoding="utf-8", errors="replace")
+        if r.returncode != 0:
+            print(f"[synth] pot_runner FAILED rc={r.returncode} "
+                  f"stderr={r.stderr[-400:]!r}")
         results = {}
         try:
             for item in _json.load(open(cout, encoding="utf-8")):
                 results.setdefault(item["cand"], {})[item["sample"]] = item
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[synth] pot_runner results unreadable: {e!r} "
+                  f"(n_codes={len(all_codes)})")
         for c in candidates:
             res = results.get(candidates.index(c), {})
             a0, a1 = res.get(0), res.get(1)
