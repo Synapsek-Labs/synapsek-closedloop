@@ -38,7 +38,8 @@ def run_one(code: str) -> tuple[bool, float | None]:
 def main():
     codes = json.loads(open(sys.argv[1], encoding="utf-8").read())
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        results = list(pool.map(lambda item: (item["idx"], run_one(item["code"])), codes))
+        results = list(pool.map(
+            lambda item: (item.get("idx", item.get("cand")), run_one(item["code"])), codes))
     json.dump([{"idx": idx, "ok": ok, "number": num} for idx, (ok, num) in results],
               open(sys.argv[2], "w", encoding="utf-8"))
 
