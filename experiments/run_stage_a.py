@@ -26,6 +26,9 @@ def main():
     ap.add_argument("--battery-size", type=int, default=400,
                     help="held-out battery size for non-smoke runs (size change triggers a fresh frozen battery)")
     ap.add_argument("--arm", choices=["static", "loop", "both"], default="both")
+    ap.add_argument("--loop-mode", choices=["select", "synth"], default="select",
+                    help="select: re-weight pool by difficulty | synth: generate new "
+                         "failure-conditioned problems (docs/tier0b_verdict.md pivot #1)")
     ap.add_argument("--smoke", action="store_true", help="tiny sizes; verifies pipeline end-to-end")
     args = ap.parse_args()
 
@@ -70,8 +73,9 @@ def main():
         acc = solve_rate(scored)
         rec = {"held_out_accuracy": acc, "tokens_trained": tokens_spent,
                "wall_hours": round((time.time() - t0) / 3600, 2), **extra}
+        tag = f"results_seed{args.seed}_{args.loop_mode}.json"
         results["arms"][arm] = rec
-        (out_dir / f"results_seed{args.seed}.json").write_text(json.dumps(results, indent=2))
+        (out_dir / tag).write_text(json.dumps(results, indent=2))
         print(f"[{arm}] held-out acc={acc:.4f} tokens={tokens_spent}")
         return acc
 
@@ -98,20 +102,39 @@ def main():
 
         budget_left = cfg["budget"]["total_tokens_per_arm"]
         difficulty = None
+        synth_bank: list[dict] = []   # verified synthesized problems (synth mode)
         tokens_spent = 0
         cycle = 0
         by_id = {p["id"]: p for p in pool}
         n_probe = min(cfg["loop_arm"]["probe_subset_per_cycle"], len(pool))
         for cycle in range(cfg["loop_arm"]["cycles"]):
+            failed_for_synth = []
             if cycle > 0:
                 sub = rng.sample(pool, n_probe)
                 scored = run_battery(model, tok, sub, max_new=cfg["eval"]["max_new_tokens"])
                 difficulty = selector.bucket_by_difficulty(scored, cfg["loop_arm"]["buckets"])
-                print(f"cycle {cycle} probe solve-rate={solve_rate(scored):.3f}")
+                failed_for_synth = [r for r in scored if not r["solved"]]
+                print(f"cycle {cycle} probe solve-rate={solve_rate(scored):.3f} "
+                      f"failed={len(failed_for_synth)}")
             n_slice = min(budget_left // est_tokens, len(pool) // cfg["loop_arm"]["cycles"])
-            slice_ids = selector.select_slice(pool, difficulty, n_slice,
-                                              strategy=cfg["loop_arm"]["selection"], rng=rng)
-            probs = [by_id[i] for i in slice_ids]
+            if args.loop_mode == "synth" and cycle > 0:
+                from src.loop.synthesizer import synthesize
+                new_probs = synthesize(model, tok, failed_for_synth, per_failed=1,
+                                       max_new=cfg["eval"]["max_new_tokens"])
+                synth_bank.extend(new_probs)
+                print(f"cycle {cycle}: synthesized {len(new_probs)} verified problems "
+                      f"(bank={len(synth_bank)})")
+                # slice = all banked synth problems + uniform refresh to fill budget
+                fill = max(0, n_slice - len(synth_bank))
+                refresh_ids = selector.select_slice(pool, None, fill,
+                                                    strategy="uniform", rng=rng)
+                probs = synth_bank + [by_id[i] for i in refresh_ids]
+                probs = probs[:n_slice + len(synth_bank)]  # allow bank overshoot; tokens still accounted
+            else:
+                slice_ids = selector.select_slice(pool, difficulty, n_slice,
+                                                  strategy=cfg["loop_arm"]["selection"],
+                                                  rng=rng)
+                probs = [by_id[i] for i in slice_ids]
             stat = train_steps(model, tok, probs, cfg["budget"]["lr"],
                                cfg["budget"]["batch_size"], cfg["budget"]["grad_accum"],
                                cfg["data"]["max_len_tokens"])
@@ -124,7 +147,7 @@ def main():
     verdict = {"seed": args.seed, **results["arms"],
                "delta": results["arms"].get("loop", {}).get("held_out_accuracy", 0)
                         - results["arms"].get("static", {}).get("held_out_accuracy", 0)}
-    (out_dir / f"verdict_seed{args.seed}.json").write_text(json.dumps(verdict, indent=2))
+    (out_dir / f"verdict_seed{args.seed}_{args.loop_mode}.json").write_text(json.dumps(verdict, indent=2))
     print("VERDICT:", json.dumps(verdict, indent=2))
 
 
