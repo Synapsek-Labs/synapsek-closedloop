@@ -7,6 +7,9 @@ pass rate on shinobi), while execution is near-ground-truth for arithmetic.
 """
 from __future__ import annotations
 import re
+import sys
+from collections import Counter
+from pathlib import Path
 
 import torch
 
@@ -95,33 +98,41 @@ def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
             if len(q) > 40 and q.endswith("?") and has_numeric_answer(q):
                 candidates.append({"question": q, "source": sources[s + j]})
 
-    # --- stage 2: program-of-thought execution verification ---
-    verified = []
-    Bv = 6
+    # --- stage 2: program-of-thought verification via ONE batch-executor process ---
+    all_codes = []
+    Bv = 8
     for s in range(0, len(candidates), Bv):
         chunk = candidates[s:s + Bv]
         pot_prompts = [POT_PROMPT.format(q=c["question"]) for c in chunk for _ in range(2)]
         codes = _gen(model, tok, pot_prompts, max_new)
         for j, c in enumerate(chunk):
-            answers = []
             for v in range(2):
                 code = _extract_code(codes[j * 2 + v])
-                if not code:
-                    continue
-                try:
-                    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
-                        f.write(code)
-                        path = f.name
-                    r = subprocess.run([python_exe or "python", path], capture_output=True,
-                                       text=True, timeout=20)
-                    os.unlink(path)
-                    nums = re.findall(r"-?\d[\d,]*\.?\d*", r.stdout.strip())
-                    if nums:
-                        answers.append(round(float(nums[-1].replace(",", "")), 4))
-                except Exception:
-                    continue
-            if len(answers) == 2 and answers[0] == answers[1]:
+                if code:
+                    all_codes.append({"cand": s + j, "sample": v, "code": code})
+
+    exe = python_exe or sys.executable or "python"
+    verified = []
+    if all_codes and exe:
+        import json as _json, tempfile, os
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                         encoding="utf-8") as f:
+            _json.dump(all_codes, f); cin = f.name
+        cout = cin + ".out"
+        runner = Path(__file__).parent / "pot_runner.py"
+        r = subprocess.run([exe, str(runner), cin, cout], capture_output=True,
+                           text=True, timeout=600, encoding="utf-8", errors="replace")
+        results = {}
+        try:
+            for item in _json.load(open(cout, encoding="utf-8")):
+                results.setdefault(item["cand"], {})[item["sample"]] = item
+        except Exception:
+            pass
+        for c in candidates:
+            res = results.get(candidates.index(c), {})
+            a0, a1 = res.get(0), res.get(1)
+            if a0 and a1 and a0["ok"] and a1["ok"] and a0["number"] == a1["number"]:
                 verified.append({"id": f"synth_{len(verified):05d}",
-                                 "question": c["question"], "answer": str(answers[0]),
+                                 "question": c["question"], "answer": str(a0["number"]),
                                  "verified": "exec", "source": c["source"]})
     return verified
