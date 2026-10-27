@@ -1,0 +1,41 @@
+# Tier-0 Stage A: post-training closed-loop vs static, equal budget.
+# Runs on a single RTX 5090 32GB (QLoRA). See docs/tier0_plan.md for verdict rules.
+
+model:
+  name: Qwen/Qwen2.5-1.5B-Instruct
+  dtype: bfloat16
+  load_in_4bit: true          # QLoRA; ~1.2GB weights + activations fits 32GB easily
+
+data:
+  train_pool: gsm8k           # openai/gsm8k, main config, train split (7473 problems)
+  held_out_battery: probes/battery_held_out.jsonl   # frozen BEFORE any run
+  probe_pool: probes/pool_train.jsonl               # training pool w/ per-problem metadata
+  max_len_tokens: 1024
+
+budget:
+  # equal-TOKEN budget enforced by the orchestrator across both arms
+  total_tokens_per_arm: 60_000_000     # ~6k samples x ~1k tokens; conservative for 24-48h
+  batch_size: 8
+  grad_accum: 4
+  lr: 2.0e-4
+  epochs_within_cycle: 1
+
+loop_arm:
+  cycles: 3
+  probe_subset_per_cycle: 300          # problems probed to estimate cluster difficulty
+  buckets: 5                           # difficulty buckets by solve rate
+  selection: weak_bucket_heavy         # oversample low-solve-rate buckets
+
+static_arm:
+  selection: uniform                   # fixed random slice, chosen ONCE up-front
+
+seeds: [17, 41]     # 2 per arm per docs/tier0_plan.md; run seed 17 first if wall-clock tight
+
+eval:
+  max_new_tokens: 512
+  temperature: 0.0
+  answer_extraction: last_number
+
+report:
+  out_dir: runs/stage_a
+  write: results.json

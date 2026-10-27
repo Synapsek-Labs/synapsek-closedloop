@@ -1,0 +1,9 @@
+# Tier-0 Stage A environment — CUDA 12.8+ (RTX 5090 / Blackwell)
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch>=2.7
+transformers>=4.51
+datasets>=3.0
+peft>=0.14
+accelerate>=1.4
+bitsandbytes>=0.45
+pyyaml>=6.0
