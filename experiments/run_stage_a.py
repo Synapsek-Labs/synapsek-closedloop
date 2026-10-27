@@ -37,19 +37,23 @@ def main():
         cfg["loop_arm"]["probe_subset_per_cycle"] = 20
         cfg["eval"]["max_new_tokens"] = 64
 
-    # --- freeze check: battery must match the manifest (honesty rule) ---
+    # --- battery: build if absent; for REAL runs, require the full-size battery ---
     manifest_path = Path(cfg["data"]["held_out_battery"]).with_suffix(".manifest.json")
-    if manifest_path.exists():
+    full_n = 40 if args.smoke else 400
+    need_build = not manifest_path.exists()
+    if not need_build:
+        m = json.loads(manifest_path.read_text())
+        need_build = m["n_held_out"] != full_n   # smoke battery must not freeze the real run
+    if need_build:
+        print("building battery (first run or size mismatch)...")
+        manifest = battery.build(n_held_out=full_n, n_pool=60 if args.smoke else 5000, seed=0)
+        print(json.dumps(manifest, indent=2))
+    else:
         assert battery.verify_frozen(cfg["data"]["held_out_battery"]) == \
             json.loads(manifest_path.read_text())["held_out_sha256"], "held-out battery drifted!"
-    else:
-        print("building battery (first run only)...")
-        manifest = battery.build(n_held_out=40 if args.smoke else cfg and 400,
-                                 n_pool=60 if args.smoke else 5000, seed=0)
-        print(json.dumps(manifest, indent=2))
 
     held = battery.load(cfg["data"]["held_out_battery"])
-    pool = battery.load(cfg["data"]["pool_train"])
+    pool = battery.load(cfg["data"]["probe_pool"])
     print(f"battery={len(held)} pool={len(pool)}")
 
     tok, model = load_policy(cfg["model"]["name"], cfg["model"]["load_in_4bit"])
