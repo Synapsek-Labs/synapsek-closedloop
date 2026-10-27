@@ -46,3 +46,20 @@ localizer if FMD is infeasible at this scale.
    and wired to restart/branch actions in an agent loop — measure wasted-token
    reduction vs no-monitor. This is the Learning Node self-monitor, powered by a
    signal we have ALREADY validated.
+
+## Greedy-trace replication result (2026-10-28, registered follow-up #1 — RESOLVED)
+
+| Probe | sampled traces | greedy traces |
+|---|---|---|
+| trace correctness | 0.702 ± 0.022 | **0.716 ± 0.018** |
+| loc_cum | 0.918 ± 0.042 | 0.817 ± 0.131 (only 30 judge-labeled wrong traces — high variance) |
+| loc_strict | 0.726 ± 0.099 | n/a (too few labeled positives) |
+
+**Sampling-noise hypothesis REFUTED**: greedy traces score the same as sampled (~0.71).
+The gap to the paper's 0.95 is a genuine domain/setup gap at 1.5B (their regime:
+MATH-500-style problems, larger n, different extraction). **STOP-FMD-1.5B is a real
+negative, not an artifact.** The cumulative-error signal persists across both regimes
+(0.92 sampled / 0.82 greedy-with-few-labels) — it remains the actionable product
+signal. Note: judge labeling is the data bottleneck (found first mistakes in only
+123/600 sampled and 30/228 greedy wrong traces) — label quality work precedes any
+further probe scaling.
