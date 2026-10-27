@@ -120,7 +120,8 @@ def main():
             if args.loop_mode == "synth" and cycle > 0:
                 from src.loop.synthesizer import synthesize
                 new_probs = synthesize(model, tok, failed_for_synth, per_failed=1,
-                                       max_new=cfg["eval"]["max_new_tokens"])
+                                       max_new=cfg["eval"]["max_new_tokens"],
+                                       python_exe=sys.executable)
                 synth_bank.extend(new_probs)
                 print(f"cycle {cycle}: synthesized {len(new_probs)} verified problems "
                       f"(bank={len(synth_bank)})")

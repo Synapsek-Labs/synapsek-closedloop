@@ -1,93 +1,127 @@
-"""Synthesis-driven loop: generate NEW training problems conditioned on measured failures.
+"""Synthesis-driven loop with program-of-thought verification.
 
-Hypothesis under test (docs/tier0b_verdict.md pivot #1): failure-targeted generation
-creates information the pool lacks, unlike selection/re-weighting (null result).
-
-Quality gate: each synthesized problem is solved 3x by the current policy (temp 0.7);
-kept only if >=2/3 generations agree, and the majority answer becomes the label.
-This is self-consistency verification — labels are grounded in agreement, not trust.
+Pivot #1 from docs/tier0b_verdict.md: failure-conditioned generation of NEW problems.
+Label verification is by EXECUTION (model writes Python, we run it; two independent
+programs must agree) — a 1.5B judge is too noisy for self-consistency (observed 0/252
+pass rate on shinobi), while execution is near-ground-truth for arithmetic.
 """
 from __future__ import annotations
-import random, re
-from collections import Counter
-
-from src.cartography.battery import extract_last_number
-from src.loop.train_arm import probe
+import re
 
 import torch
 
+from src.cartography.battery import extract_last_number
+
 SYNTH_PROMPT = (
-    "Here is a math word problem:\n\n{q}\n\n"
-    "Write ONE new math word problem that tests the same skill but uses different "
-    "numbers, names, and context. It must have a single numeric answer. "
-    "Output ONLY the new problem text, nothing else."
+    "Write ONE new math word problem that tests the same skill as this one, with "
+    "different numbers, names, and context. It must be solvable and have a single "
+    "numeric answer.\n\nExample problem:\n{q}\n\n"
+    "Output ONLY the new problem statement ending with a question mark. "
+    "Do NOT solve it, do NOT explain."
 )
+
+POT_PROMPT = (
+    "Write a short Python program that solves this problem and prints exactly one "
+    "number (the answer).\n\nProblem:\n{q}\n\nOutput ONLY the Python code."
+)
+
+_SOLUTION_MARKERS = ("to solve", "let's", "we can", "solution", "step ", "answer:",
+                     "first,", "if we", "assume", "denote")
 
 
 def _clean(text: str) -> str:
-    """Strip scaffolding the model may add."""
+    """Strip scaffolding and truncate at solution chatter."""
     text = text.strip()
-    text = re.sub(r"^(Problem|New problem)\s*[:\-]\s*", "", text, flags=re.I)
-    return text.split("\n\n")[0].strip()
+    text = re.sub(r"^(Problem|New problem)\s*[:\-]*\s*", "", text, flags=re.I)
+    text = re.sub(r"\*+", "", text)
+    low = text.lower()
+    cut = len(text)
+    for m in _SOLUTION_MARKERS:
+        i = low.find(m)
+        if i > 40 and i < cut:          # keep problems that START with these words
+            cut = i
+    text = text[:cut].strip()
+    if not text.endswith("?"):
+        qpos = text.rfind("?")
+        if qpos > 40:
+            text = text[:qpos + 1]
+    return text
 
 
 def has_numeric_answer(q: str) -> bool:
     return extract_last_number(q) is not None
 
 
-def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
-               max_new: int = 256, verify_samples: int = 3,
-               temperature: float = 0.7) -> list[dict]:
-    """failed_problems: [{id, question, solved:False}] -> [{id, question, answer, verified, source}]
-    Keeps only problems passing the self-consistency gate."""
-    import torch
-    device = "cuda:0"
-    gen_configs = dict(max_new_tokens=max_new, do_sample=True,
-                       temperature=temperature, top_p=0.95,
-                       pad_token_id=tok.pad_token_id or tok.eos_token_id)
+def _extract_code(text: str) -> str:
+    m = re.search(r"```(?:python)?\s*(.*?)```", text, re.S)
+    code = m.group(1) if m else text
+    lines = [l for l in code.strip().splitlines()
+             if not re.match(r"^(sure|here|this|note|i'll|let's)\b", l, re.I)]
+    code = "\n".join(lines).strip()
+    return code if ("print" in code and len(code) < 2000) else ""
 
-    # 1) generate candidate problems (batched)
-    prompts = []
-    meta = []
-    for p in failed_problems:
-        for k in range(per_failed):
-            prompts.append(SYNTH_PROMPT.format(q=p["question"]))
-            meta.append(p["id"])
+
+def _gen(model, tok, prompts: list[str], max_new: int, temperature: float = 0.7):
+    device = "cuda:0"
+    enc = tok(prompts, return_tensors="pt", padding=True, padding_side="left").to(device)
+    out = model.generate(**enc, max_new_tokens=max_new, do_sample=True,
+                         temperature=temperature, top_p=0.95,
+                         pad_token_id=tok.pad_token_id or tok.eos_token_id)
+    return [tok.decode(o[enc["input_ids"].shape[1]:], skip_special_tokens=True)
+            for o in out]
+
+
+def synthesize(model, tok, failed_problems: list[dict], per_failed: int = 1,
+               max_new: int = 512, python_exe: str | None = None) -> list[dict]:
+    """failed_problems: [{id, question, ...}] -> verified [{id, question, answer, source}]
+
+    Two-stage gate:
+      1. generation filter: cleaned statement, plausible length, numeric reference
+      2. program-of-thought verification: 2 independently generated Python programs
+         are EXECUTED; label accepted only if both print the same number.
+    """
+    import subprocess, tempfile, os
+
+    # --- stage 1: generate + filter candidate problems ---
+    prompts = [SYNTH_PROMPT.format(q=p["question"])
+               for p in failed_problems for _ in range(per_failed)]
+    sources = [p["id"] for p in failed_problems for _ in range(per_failed)]
     candidates = []
     B = 8
     for s in range(0, len(prompts), B):
-        enc = tok(prompts[s:s + B], return_tensors="pt", padding=True,
-                  padding_side="left").to(device)
-        out = model.generate(**enc, **gen_configs)
-        for j in range(out.shape[0]):
-            text = tok.decode(out[j][enc["input_ids"].shape[1]:], skip_special_tokens=True)
-            q = _clean(text)
-            if len(q) > 40 and has_numeric_answer(q) and q.lower() not in ("", "n/a"):
-                candidates.append({"question": q, "source": meta[s + j]})
+        texts = _gen(model, tok, prompts[s:s + B], max_new)
+        for j, raw in enumerate(texts):
+            q = _clean(raw)
+            if len(q) > 40 and q.endswith("?") and has_numeric_answer(q):
+                candidates.append({"question": q, "source": sources[s + j]})
 
-    # 2) verify: solve each candidate 3x at temp 0.7, require >=2/3 agreement
+    # --- stage 2: program-of-thought execution verification ---
     verified = []
-    Bv = 8
+    Bv = 6
     for s in range(0, len(candidates), Bv):
         chunk = candidates[s:s + Bv]
-        rep_prompts = [p["question"] for p in chunk for _ in range(verify_samples)]
-        enc = tok([f"Solve the problem. End with the numeric answer.\n\n{q}\n\nSolution:"
-                   for q in rep_prompts], return_tensors="pt", padding=True,
-                  padding_side="left").to(device)
-        out = model.generate(**enc, **gen_configs)
+        pot_prompts = [POT_PROMPT.format(q=c["question"]) for c in chunk for _ in range(2)]
+        codes = _gen(model, tok, pot_prompts, max_new)
         for j, c in enumerate(chunk):
             answers = []
-            for v in range(verify_samples):
-                idx = j * verify_samples + v
-                text = tok.decode(out[idx][enc["input_ids"].shape[1]:], skip_special_tokens=True)
-                a = extract_last_number(text)
-                if a is not None:
-                    answers.append(round(a, 4))
-            if not answers:
-                continue
-            top, cnt = Counter(answers).most_common(1)[0]
-            if cnt >= 2:  # >=2/3 self-consistency
-                verified.append({"id": f"synth_{s + j:05d}", "question": c["question"],
-                                 "answer": str(top), "verified": True,
-                                 "source": c["source"]})
+            for v in range(2):
+                code = _extract_code(codes[j * 2 + v])
+                if not code:
+                    continue
+                try:
+                    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
+                        f.write(code)
+                        path = f.name
+                    r = subprocess.run([python_exe or "python", path], capture_output=True,
+                                       text=True, timeout=20)
+                    os.unlink(path)
+                    nums = re.findall(r"-?\d[\d,]*\.?\d*", r.stdout.strip())
+                    if nums:
+                        answers.append(round(float(nums[-1].replace(",", "")), 4))
+                except Exception:
+                    continue
+            if len(answers) == 2 and answers[0] == answers[1]:
+                verified.append({"id": f"synth_{len(verified):05d}",
+                                 "question": c["question"], "answer": str(answers[0]),
+                                 "verified": "exec", "source": c["source"]})
     return verified
