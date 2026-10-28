@@ -127,3 +127,21 @@ STATUS: node-learning branch is GO with the bank architecture. Next:
 free; teacher collect + train + wrapped admission), (2) federation
 protocol for exchanging bank entries between heterogeneous Hebri nodes,
 (3) transfer solution for adapter files Mac<->shinobi<->pods.
+
+## Shinobi 400-program replication (2026-10-29): CONFIRMED
+
+GPU-only run on shinobi (RTX 5090): 401 verified teacher programs
+collected, 802 pairs (401 teacher + 401 replay) trained, bank admission
+on the full 100-problem battery:
+
+- base 38.0% vs adapter 54.0% -> ADMITTED (+16%, wrapped)
+
+Together with the pod (+19%, 44->63): TWO independent nodes, two
+independent training runs, same recipe, large replicable gains. The
+152-program neutrality was data volume, not regime or hardware.
+Node-learning branch: CONFIRMED GO.
+
+shinobi-1 now holds its own bank entry (pot-20261029, delta_pot
+regenerated at 401-program scale). Fresh-process merged gate launched
+for the completeness record. Next: federation protocol (nodes exchange
+bank entries) + adapter file transfer solution.
