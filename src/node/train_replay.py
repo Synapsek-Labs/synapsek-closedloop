@@ -29,7 +29,8 @@ def main():
     a = ap.parse_args()
     random.seed(a.seed); torch.manual_seed(a.seed)
 
-    rows = json.loads(base64.b64decode(DATA_B64).decode("utf-8"))
+    raw = base64.b64decode(DATA_B64).decode("utf-8")
+    rows = [json.loads(l) for l in raw.splitlines() if l.strip()]  # JSONL
     print(f"[replay] teacher rows: {len(rows)}", flush=True)
 
     from transformers import AutoTokenizer, AutoModelForCausalLM
