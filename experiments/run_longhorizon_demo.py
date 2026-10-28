@@ -156,23 +156,29 @@ def load_model():
     return tok, m
 
 
-def stage12(n_cal, n_test, seed=41):
+def stage12(n_cal, n_test, seed=41, shard=None, out=None):
     OUT.mkdir(parents=True, exist_ok=True)
     kb, people = build_kb()
     tasks = hop_paths(kb, people, n=n_cal + n_test)
     tok, model = load_model()
-    f = OUT / "transcripts.jsonl"
+    f = Path(out) if out else OUT / "transcripts.jsonl"
     rows = [json.loads(l) for l in f.read_text().splitlines() if l.strip()] if f.exists() else []
-    for i, t in enumerate(tasks[len(rows):], start=len(rows)):
+    if shard:
+        lo, hi = shard
+        done_ids = {r["task_id"] for r in rows}
+        todo = [t for i, t in enumerate(tasks) if lo <= i < hi and t["id"] not in done_ids]
+    else:
+        todo = tasks[len(rows):]
+    for i, t in enumerate(todo, start=0):
         r = run_agent(model, tok, t, kb)
         r.update({"task_id": t["id"], "hops": [h for h, _ in t["hops"]],
                   "answer": t["answer"], "n_hops": t["n_hops"]})
         rows.append(r)
         f.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
-        if (i + 1) % 25 == 0:
-            print(f"[lh] {len(rows)}/{len(tasks)} transcripts "
-                  f"({sum(x['success'] for x in rows)} solved)")
-    print(f"[lh] collected {len(rows)}: solve "
+        if (i + 1) % 10 == 0:
+            print(f"[lh] +{i+1}/{len(todo)} total {len(rows)} "
+                  f"({sum(x['success'] for x in rows)} solved)", flush=True)
+    print(f"[lh] done: {len(rows)} transcripts, solve "
           f"{sum(x['success'] for x in rows)/len(rows):.1%}, mean turns "
           f"{sum(x['n_turns'] for x in rows)/len(rows):.1f}")
     return rows[:n_cal], rows[n_cal:n_cal + n_test]
@@ -286,7 +292,14 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--n-cal", type=int, default=300)
     ap.add_argument("--n-test", type=int, default=300)
+    ap.add_argument("--shard", type=str, default=None, help="lo:hi task-index range")
+    ap.add_argument("--out", type=str, default=None, help="shard output file")
+    ap.add_argument("--collect-only", action="store_true")
     a = ap.parse_args()
+    if a.shard:
+        lo, hi = (int(x) for x in a.shard.split(":"))
+        stage12(a.n_cal, a.n_test, shard=(lo, hi), out=a.out)
+        sys.exit(0)
     cal, test = stage12(a.n_cal, a.n_test)
     data = stage3(cal, test)
     clf, vauc, L = stage4_train(data)
