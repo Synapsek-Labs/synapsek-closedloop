@@ -41,6 +41,7 @@ def collect_teacher_pot(node_id, n_target=150, max_problems=600, seed=7):
     rng = random.Random(seed)
     work = rng.sample(pool, min(max_problems, len(pool)))
     ttok, tmodel = load_teacher()
+    ttok.padding_side = "left"   # batched decoder-only generation requires left-padding
     rows, done = [], 0
     B = 16
     for i in range(0, len(work), B):
@@ -116,6 +117,7 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
     rng = random.Random(seed)
     tasks = rng.sample(held, min(n_eval, len(held)))
     tok, model = load_model()
+    tok.padding_side = "left"
 
     def solve(model, tok):
         acc = 0
@@ -138,6 +140,7 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
     del model
     torch.cuda.empty_cache()
     tok2, model2 = load_model()
+    tok2.padding_side = "left"
     m = PeftModel.from_pretrained(model2, str(delta_dir)).merge_and_unload()
     m.eval()
     delta_acc = solve(m, tok2)
