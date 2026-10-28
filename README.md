@@ -26,8 +26,6 @@ A complete, measured system for **safe nightly self-improvement of small local m
 | RTX 5080 pod | ~400 | 44.0% | 63.0% | **+19%** |
 | RTX 5090 (shinobi) | 401 | 38.0% | 54.0% | **+16%** |
 
-Total compute cost of the entire research arc: **< US$2**.
-
 ## Findings (all pre-registered, negatives included)
 
 - ❌ **Naive narrow-data SFT always degrades small models** — 7 gate rejections (−2% to −50% rel.) before the fix.

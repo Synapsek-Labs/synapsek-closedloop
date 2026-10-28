@@ -67,8 +67,17 @@ On SVAMP (easy arithmetic word problems), base accuracy was 79.0% — near ceili
 ### 4.6 Federation re-verification
 Two-node SWAP loop: exporter claimed 38.0%→54.0%; importer ran its own 100-problem battery on the received adapter and measured 38.0%→54.0% (+16.0%), ADMITTED, base untouched, signature verified, hash-verified bundle.
 
-## 5. Economics
-Total measured cost of the entire experimental arc (both GPU nodes, all training, all gates, both federation tests): **under US$2 of rented GPU** (~$1.55 on RunPod; shinobi's 5090 is owned). A node-night is one collection (~5 min GPU) + one training (~12 min) + one admission battery (~20 min) on a single consumer GPU.
+## 5. What we discovered (vs. what we integrated)
+
+**New measured findings — ours, each backed by pre-registered runs in this repo:**
+
+1. **Merge-destruction finding.** A capability adapter that improves a 4-bit-quantized base by +19% when *wrapped* delivers only +3% when *merged* into that same base (`merge_and_unload`). To our knowledge this effect — quantized merge destroying ~85% of an adapter's measured gain — is not documented in the literature, and it reverses the default advice ("merge for deployment") for quantized serving. This is the first finding we would submit on its own.
+2. **The failure-band law.** Small-data verified SFT produces gains only when base accuracy on the target domain lies in a ~40–70% band; above it, updates act as pure noise/forgetting (measured 79%→69% REJECT), below it teacher and student both fail. This gives continual-learning systems a mechanical domain-selection rule: *the baseline eval is the curriculum gate*.
+3. **The verified-data-volume threshold.** Under the replay-anchored regime, verified-program count behaves like a phase transition at the 1.5B scale: 152 programs ≈ noise (−1%), ~400 programs ≈ +16–19% across two GPUs. Combined with [2]-style "less is more" results, this suggests verified-program count is the controllable variable small labs should optimize.
+4. **Receiver-side re-verification as a federation primitive.** Capability exchange where the *receiver* re-measures the claimed gain on its own hardware and held-out battery before first routing (with signed manifests and base-identity checks). Distinguishes SWAP from federated learning (shares gradients, trusts peers) and memory-sharing systems (shares text, not learned weights). Verified end-to-end; to our knowledge not previously demonstrated.
+5. **The safe-learning composition.** The observation that admission-gating + never-merge wrapping converts continual learning from a risk into a free filter — every nightly training run becomes a cheap experiment whose failures are discarded automatically.
+
+**Integrated from prior work (not claimed as novel):** replay as an anti-forgetting mechanism [1]; execution-verified self-improvement lineages (STaR et al.); adapter routing [6]; refusal-direction ablation [4]; expert-streaming inference [5].
 
 ## 6. Limitations
 - n=100 batteries: ±~5% noise band; all claims above report both arms.
