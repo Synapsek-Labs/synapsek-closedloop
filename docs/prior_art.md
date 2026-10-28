@@ -50,6 +50,21 @@ stake it precisely.
 **Residual novelty:** the **system claim** — an agent swarm whose nodes learn nightly
 from their own verified trajectories (incl. failure annotation), with verification-gated
 federated merging and forgetting checks. No published system does this end-to-end.
+NOTE (re-checked 2026-10-28, components now exist separately):
+- **LOCAL** (arXiv:2608.15241): single-GPU runtime for contiguous on-device agent
+  learning (adapter versioning + KV-cache co-scheduling). Occupies the node RUNTIME
+  layer; no federation, no trajectory verification.
+- **CURATOR** (arXiv:2606.25115): budget-curated on-device experience memory with
+  provenance-gated PEER sharing (memory-level, frozen weights). Occupies memory-level
+  insight sharing; not weight-delta federation.
+- Federated LoRA/PEFT infra is crowded: Floe (2602.14302), FedWeave (2607.26618),
+  RoboFL (2609.34968), EFFEKT (2608.08138), FedTREK-LM (2603.13264).
+- Concept-level overlap: "Federated Analyst Fleets" design blog (shared/personal
+  adapter split + DP) — same spirit, no published system/eval.
+=> The Learning Node claim must be stated as the INTEGRATION (nightly learning from
+verified agent TRAJECTORIES -> verification-gated WEIGHT-delta federation -> deployed
+self-monitor), citing LOCAL/CURATOR/Floe as component prior art. Each mechanism must
+cite its paper.
 
 ## 5. Agent runtime self-monitoring / early abort — **OCCUPIED, hot (checked 2026-10-28)**
 
