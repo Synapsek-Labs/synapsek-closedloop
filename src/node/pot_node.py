@@ -119,11 +119,11 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
     tok, model = load_model()
     tok.padding_side = "left"
 
-    def solve(model, tok):
-        from src.loop.pot_runner import run_one
+    def solve(model, tok, label):
+        import subprocess, tempfile, os
         from src.loop.synthesizer import _extract_code
         acc = 0
-        B = 16
+        B = 8
         for i in range(0, len(tasks), B):
             chunk = tasks[i:i + B]
             prompts = [POT_PROMPT.format(q=t["question"]) for t in chunk]
@@ -131,27 +131,49 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
                       truncation=True, max_length=1024).to("cuda:0")
             out = model.generate(**ids, max_new_tokens=768, do_sample=False,
                                  pad_token_id=tok.pad_token_id or tok.eos_token_id)
+            codes, goids = [], []
             for j, t in enumerate(chunk):
                 text = tok.decode(out[j][ids["input_ids"].shape[1]:],
                                   skip_special_tokens=True)
                 code = _extract_code(text)
-                if not code:
-                    continue
-                ok, number = run_one(code)
+                if code:
+                    codes.append({"idx": len(codes), "code": code})
+                    goids.append((len(codes) - 1, t))
+            # execute in an ISOLATED subprocess (GIL-deadlock-proof, pot_runner main)
+            with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+                json.dump(codes, f); cf = f.name
+            rf = cf + ".res"
+            try:
+                subprocess.run([".venv/Scripts/python.exe", "-m",
+                                "src.loop.pot_runner", cf, rf],
+                               timeout=600, capture_output=True)
+                res = {r["idx"]: r for r in json.load(open(rf))}
+            except Exception as e:
+                print(f"[pot-gate:{label}] exec batch failed ({e}) — "
+                      f"{len(goids)} problems lost", flush=True)
+                res = {}
+            finally:
+                for p in (cf, rf):
+                    try: os.unlink(p)
+                    except OSError: pass
+            for idx, t in goids:
+                r = res.get(idx)
                 gold = extract_last_number(t["answer"])
-                if ok and number is not None and gold is not None and \
-                        abs(number - gold) < 1e-4:
+                if r and r.get("ok") and r.get("number") is not None and \
+                        gold is not None and abs(r["number"] - gold) < 1e-4:
                     acc += 1
+            print(f"[pot-gate:{label}] batch {i//B + 1}/{(len(tasks)+B-1)//B} "
+                  f"cum_acc={acc}", flush=True)
         return acc / len(tasks)
 
-    base_acc = solve(model, tok)
+    base_acc = solve(model, tok, "base")
     del model
     torch.cuda.empty_cache()
     tok2, model2 = load_model()
     tok2.padding_side = "left"
     m = PeftModel.from_pretrained(model2, str(delta_dir)).merge_and_unload()
     m.eval()
-    delta_acc = solve(m, tok2)
+    delta_acc = solve(m, tok2, "delta")
     accept = delta_acc >= base_acc + margin
     res = {"base_acc": base_acc, "delta_acc": delta_acc, "accepted": accept,
            "n_eval": len(tasks), "margin": margin, "substrate": "pot"}
