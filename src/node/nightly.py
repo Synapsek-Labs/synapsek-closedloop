@@ -146,8 +146,11 @@ def _eval_acc(model, tok, kb, people, tasks, seed):
 
 
 def gate(node_id, delta_dir, n_eval=60, margin=0.02, seed=7):
-    """Receiver-style held-out re-verification. Returns metrics dict."""
+    """Receiver-style held-out re-verification. Returns metrics dict.
+    Self-sufficient: MUST set the exemplar (cycle-5 evidence: standalone
+    gate process ran exemplar-less -> base 0.0%, verdict invalid)."""
     kb, people = build_kb()
+    set_exemplar(kb)
     tasks = make_workload(kb, people, n_eval, seed=seed + 1)
     tok, model = load_model()
     base_acc = _eval_acc(model, tok, kb, people, tasks, seed)
@@ -187,6 +190,7 @@ def sync(node_id, exchange="runs/node/exchange", seed=7):
         if peer.name == node_id or not peer.is_dir():
             continue
         kb, people = build_kb()
+        set_exemplar(kb)
         tasks = make_workload(kb, people, 60, seed=seed + 1)
         tok, model = load_model()
         cur_acc = _eval_acc(model, tok, kb, people, tasks, seed)
