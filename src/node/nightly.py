@@ -76,18 +76,19 @@ def collect(node_id, n_work=60, seed=7):
 
 
 def to_sft_text(task, turns):
-    """Serialize a verified trajectory into the agent's own prompt format."""
-    s = SYS + "\n\nTask: follow this chain and give the final entity/attribute:\n"
+    """Serialize a verified trajectory into (prompt, target) pairs."""
+    import experiments.run_longhorizon_demo as lhd
+    s = lhd.SYS + "\n\nTask: follow this chain and give the final entity/attribute:\n"
     s += " -> ".join(h for h, _ in task["hops"]) + "\n"
     cur = s
-    parts = [s]
+    pairs = []
     for t_ in turns:
         act = f'{t_["kind"]}("{t_["value"]}")'
-        parts.append(cur + "\nNext action:\n" + act)
+        pairs.append((cur + "\nNext action:\n", act))
         if t_["kind"] == "final":
             break
         cur += f"\n{act}\nObservation: {t_['obs']}\n"
-    return parts  # list of (prompt, target) pairs
+    return pairs
 
 
 # ---------------------------------------------------------------- train
