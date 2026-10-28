@@ -87,10 +87,10 @@ def hop_paths(kb, people, n, seed=11):
             c = rng.choice(COMPS)
             ceo = kb[(c, "role_CEO")]
             ct = kb[(ceo, "works_at")]
-            role_ct = kb[(ct, "role")]
+            city = kb[(ct, "hq_city")]
             path = [(f"the CEO of {c}", ceo), (f"where {ceo} works", ct),
-                    (f"the role of {ceo}", role_ct)]
-            ans = role_ct
+                    (f"the HQ city of {ct}", city)]
+            ans = city
         out.append({"id": f"t{len(out)}", "hops": path, "answer": ans, "start": p0,
                     "n_hops": len(path)})
     return out
