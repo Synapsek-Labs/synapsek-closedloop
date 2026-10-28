@@ -16,7 +16,8 @@ import torch
 from peft import LoraConfig, get_peft_model
 
 from experiments.run_longhorizon_demo import build_kb, hop_paths, load_model
-from src.node.nightly import (NODE_DIR, to_sft_text)
+from src.node.nightly import (NODE_DIR, to_sft_text, make_workload,
+                              set_exemplar)
 
 
 def dpo_pairs(rows):
@@ -97,21 +98,54 @@ def train_delta_dpo(node_id, rows, beta=0.1, n_epochs=1, lr=5e-5, seed=7):
     return ad
 
 
+def collect_pairs(node_id, n_tasks=80, seed=7):
+    """Two rollouts per task: greedy + sampled. Greedy-only collection is
+    deterministic -> no task has both outcomes -> zero preference pairs
+    (cycle-3 evidence). Pairs need outcome variance on the same task."""
+    import experiments.run_longhorizon_demo as lhd
+    kb, people = build_kb()
+    set_exemplar(kb)
+    tasks = make_workload(kb, people, n_tasks, seed=seed)
+    tok, model = load_model()
+    rows = []
+    for i, t in enumerate(tasks):
+        rg = run_agent(model, tok, t, kb, temperature=0.0)
+        rs = run_agent(model, tok, t, kb, temperature=0.7)
+        for r, tag in ((rg, "greedy"), (rs, "sample")):
+            r.update({"task_id": t["id"], "hops": [h for h, _ in t["hops"]],
+                      "answer": t["answer"], "n_hops": t["n_hops"],
+                      "rollout": tag})
+            rows.append(r)
+    d = NODE_DIR / node_id
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / "work_pairs.jsonl"
+    f.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
+    solved = sum(x["success"] for x in rows)
+    n_pair_tasks = len({r["task_id"] for r in rows})
+    print(f"[node:{node_id}] collected {n_pair_tasks} tasks x2 rollouts "
+          f"({solved} successes)")
+    return rows
+
+
 if __name__ == "__main__":
     import argparse, json, sys
     sys.path.insert(0, ".")
-    from src.node.nightly import collect, gate, sync
+    from experiments.run_longhorizon_demo import run_agent
+    from src.node.nightly import gate, sync
     ap = argparse.ArgumentParser()
     ap.add_argument("--node", required=True)
-    ap.add_argument("--work", default=None, help="existing work.jsonl (skip collect)")
+    ap.add_argument("--work", default=None)
+    ap.add_argument("--tasks", type=int, default=80)
     ap.add_argument("--gate-n", type=int, default=60)
+    ap.add_argument("--skip-sync", action="store_true")
     a = ap.parse_args()
     if a.work:
         rows = [json.loads(l) for l in open(a.work, encoding="utf-8") if l.strip()]
-        print(f"[node:{a.node}] reusing {len(rows)} collected trajectories")
+        print(f"[node:{a.node}] reusing {len(rows)} rollouts")
     else:
-        rows, _, _ = collect(a.node, 150)
+        rows = collect_pairs(a.node, a.tasks)
     ad = train_delta_dpo(a.node, rows)
     if ad is not None:
         gate(a.node, ad, a.gate_n)
-        sync(a.node)
+        if not a.skip_sync:
+            sync(a.node)
