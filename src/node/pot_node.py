@@ -249,7 +249,6 @@ if __name__ == "__main__":
         sys.exit(0)
     from src.node.bank import add_to_bank
     import time
-    add_to_bank(a.node, ad, name=f"pot-{time.strftime('%Y%m%d')}",
-                probe_n=40)
+    add_to_bank(a.node, ad, name=f"pot-{time.strftime('%Y%m%d')}")
     print("[pot] collect+train+bank done -> run the full gate in a FRESH process:")
     print(f"  python -m src.node.pot_node --node {a.node} --gate-only")
