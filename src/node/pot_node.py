@@ -147,7 +147,18 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
                 subprocess.run([".venv/Scripts/python.exe", "-m",
                                 "src.loop.pot_runner", cf, rf],
                                timeout=600, capture_output=True)
-                res = {r["idx"]: r for r in json.load(open(rf))}
+                res = {}
+                # pot_runner writes results incrementally as JSON lines;
+                # parse line-tolerantly (torn final line is normal)
+                for line in open(rf, encoding="utf-8"):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        r = json.loads(line)
+                        res[r["idx"]] = r
+                    except Exception:
+                        continue
             except Exception as e:
                 print(f"[pot-gate:{label}] exec batch failed ({e}) — "
                       f"{len(goids)} problems lost", flush=True)
