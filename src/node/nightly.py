@@ -111,13 +111,13 @@ def train_delta(node_id, rows, seed=7):
                                      "gate_proj", "up_proj", "down_proj"])
     model = get_peft_model(model, cfg)
     model.train()
-    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=1e-4)
+    opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=5e-5)
     pairs = []
     for r in sft_rows:
         for prompt, target in to_sft_text(by_id[r["task_id"]], r["turns"]):
             pairs.append((prompt, target))
     random.shuffle(pairs)
-    for epoch in range(3):
+    for epoch in range(1):
         for prompt, target in pairs:
             p_ids = tok(prompt, return_tensors="pt", truncation=True,
                         max_length=2048).input_ids.to("cuda:0")
