@@ -201,9 +201,10 @@ if __name__ == "__main__":
     ap.add_argument("--node", default="shinobi-1")
     ap.add_argument("--target", type=int, default=150)
     ap.add_argument("--gate-only", action="store_true")
+    ap.add_argument("--delta", default="delta_pot")
     a = ap.parse_args()
     if a.gate_only:
-        gate_pot(a.node, NODE_DIR / a.node / "delta_pot")
+        gate_pot(a.node, NODE_DIR / a.node / a.delta)
         sys.exit(0)
     rows = collect_teacher_pot(a.node, a.target)
     ad = train_student_pot(a.node, rows)
