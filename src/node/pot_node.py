@@ -144,7 +144,7 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
                 json.dump(codes, f); cf = f.name
             rf = cf + ".res"
             try:
-                subprocess.run([".venv/Scripts/python.exe", "-m",
+                subprocess.run([sys.executable, "-m",
                                 "src.loop.pot_runner", cf, rf],
                                timeout=600, capture_output=True)
                 res = {}
