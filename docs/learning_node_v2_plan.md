@@ -104,3 +104,26 @@ teacher programs (pool supports it; LIMO: data volume/quality drives small
 SFT), (2) delta scale-down (multiply LoRA B by 0.5 at merge time in the
 bank wrapper — tunable post-hoc WITHOUT retraining), (3) 32B RunPod
 teacher (~$5). Bank architecture unchanged: rejections stay free.
+
+## 400-program run (2026-10-29, pod 7tyiqpni403kxf, ~$0.50, STOPPED after run)
+
+Self-driving container: install -> clone -> collect --target 400 ->
+replay-mix train -> bank admission (n=100) -> fresh-process gate. All
+verdicts read via RunPod log streaming (no SSH needed).
+
+- Bank admission (WRAPPED adapter, n=100, seed 11): base 44.0% vs
+  adapter 63.0% -> ADMITTED (+19%)
+- Fresh-process gate (MERGED adapter, n=100, seed 7): base 47.0% vs
+  delta 50.0% -> ACCEPT (+3%)
+- Same adapter, two deployment modes: merging into the 4-bit base
+  destroys most of the gain (bnb rounding) — the bank's never-merge
+  design preserves ~6x more of the improvement. Architecture validated
+  empirically, not just structurally.
+- Data scaling confirmed as the lever: 152 programs -> neutral (+3/-1
+  noise); ~400 programs -> +19% wrapped. LIMO logic held.
+
+STATUS: node-learning branch is GO with the bank architecture. Next:
+(1) reproduce on shinobi with the same 400-program recipe (shinobi GPU
+free; teacher collect + train + wrapped admission), (2) federation
+protocol for exchanging bank entries between heterogeneous Hebri nodes,
+(3) transfer solution for adapter files Mac<->shinobi<->pods.
