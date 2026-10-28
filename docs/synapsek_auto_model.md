@@ -12,14 +12,21 @@
   exactly the machinery for turning a generic open base into a
   Synapsek model.
 
-## The family (target)
+## The family (NAMED 2026-10-29): Nyx — Synapsek's model family
+
+Product = **Synapsek Auto** (the Hebri experience). Model family =
+**Nyx** (Greek goddess of night — short, cool, coined-by-us energy).
+Star grades encode size (Nyx = night; the tiers are night sky):
 
 | Model | Base | Role |
 |---|---|---|
-| Synapsek Auto 0.5B | Qwen2.5-0.5B | colibri / laptop CPU |
-| Synapsek Auto 1.5B | Qwen2.5-1.5B (Apache-2.0) | default Hebri node |
-| Synapsek Auto 3B | Qwen2.5-3B / Qwen3-4B | prosumer GPU |
-| Synapsek Auto 8B | Qwen3-8B | 5090-class nodes |
+| **Nyx-Micro** (0.5B) | Qwen2.5-0.5B | colibri controller / laptop CPU |
+| **Nyx-1** (1.5B) | Qwen2.5-1.5B (Apache-2.0) | default Hebri node — FLAGSHIP |
+| **Nyx-3** (3-4B) | Qwen2.5-3B / Qwen3-4B | prosumer GPU |
+| **Nyx-8** (8B) | Qwen3-8B | 5090-class nodes |
+
+Versioning: Nyx-1.1 etc. for retrains. Escalation/streamed frontier
+rung is product-level ("Frontier boost"), no model name.
 
 "Super compressed": ship 4-bit (works now — our whole stack runs
 4-bit) + optional merged bf16 releases. "Super capable": the swarm
