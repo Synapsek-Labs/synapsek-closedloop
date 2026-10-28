@@ -86,3 +86,16 @@ A BankEntryManifest, signed by the exporting node's key:
       adapter.tgz
 - [ ] test: two-node loop on shinobi (export shinobi-1 -> import
       mac-1 or pod clone) with forged/manifest-mismatch rejection
+
+## SWAP v0 loop test PASSED (2026-10-29)
+
+shinobi-1 --export pot-20261029 (ed25519-signed manifest, gain claim
+38->54) -> shinobi-2 --import: signature verified, base identity
+checked, staged in quarantine, FULL admission battery re-run on
+receiver hardware -> ADMITTED, local gain +16.0% (matches exporter's
+claim exactly). Never-merge held; receiver base untouched.
+
+Federation is functional. Remaining for multi-machine: adapter file
+transfer between physical hosts (shinobi <-> Mac <-> pods), then the
+gateway transport swap-in (pairing/authz/peer channels already exist
+in the Hebri gateway).
