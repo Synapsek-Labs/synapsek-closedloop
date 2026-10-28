@@ -47,3 +47,26 @@ base-model context-free generations (50/50). Gate unchanged (+2%, held-out
 battery, execution-scored). Decision rule: ACCEPT -> regime fix works,
 build the adapter bank on top; REJECT -> stop merging entirely, go straight
 to bank+router architecture where merging is never required.
+## VERDICT (2026-10-28 night): replay-mix gate ACCEPT
+
+RunPod RTX 5080 burst (pod l2jwk0ff805teh, ~$0.90 total, terminated after
+verdict). Same pre-registered gate: 100 held-out battery problems (seed-0
+deterministic split), execution-scored, +2% margin, fresh process.
+
+- base 47.0% vs delta 50.0% -> ACCEPT (+3.0%)
+- Base replicates shinobi's 48.0% on different hardware: metric solid.
+- Context: this is the FIRST ACCEPT after 7 rejections (5 node cycles +
+  SFT/teacher merges). Single-variable change vs the rejected teacher-SFT:
+  data MIXED 50/50 with context-free base-model replay (arXiv:2505.13811).
+
+CONCLUSION: the node-learning failure was the TRAINING REGIME (narrow-data
+SFT -> catastrophic forgetting), not the data source. Replay-anchored
+teacher SFT on ~150 verified programs yields the first genuinely-positive
+weight delta. Architecture next: adapter-bank (never merge) + router, so
+gate rejections cost nothing structurally; federation of bank entries
+across heterogeneous Hebri nodes (user's mesh) = v2 product.
+
+Ops banked: update-pod restarts WIPED the container (lost first adapter,
+retrained); RunPod proxy blocks sftp/scp -O/port-forwarding; run compute
+on pod via git-cloned repo + nohup; pull results through the PTY (verdict
+lines) before touching pod config.
