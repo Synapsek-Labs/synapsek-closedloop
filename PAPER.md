@@ -11,7 +11,7 @@ We present a complete, cheaply reproducible stack that lets a small (1.5B–8B) 
 
 Across ten pre-registered gate experiments we establish: (a) that naive few-example fine-tuning of a 1.5B model on verified data *consistently degrades* it (seven rejections, −2% to −50% relative); (b) that replay anchoring converts the failure to parity (first accept: +3.0% absolute on a 100-problem held-out battery, n=100 noise band); (c) that **data volume is the decisive axis** — scaling verified programs from 152 to ~400 moves the same recipe from noise (+3%) to a large, replicable gain (+16% and +19% on two independent GPUs); (d) that merging a strong adapter into a 4-bit-quantized base destroys ~85% of its measured gain (+19% wrapped vs +3% merged), validating wrapped-adapter deployment; and (e) a **failure-band law**: verified small-data SFT pays off only when base accuracy on the target domain lies in a ~40–70% band — above it there is no headroom and updates act as noise.
 
-The full pipeline — collection, training, admission, gating, and federation — runs for under US$1 of rented compute per node-night, and we publish the complete negative-result trail.
+The full pipeline — collection, training, admission, gating, and federation — runs on a single consumer GPU per node, and we publish the complete negative-result trail.
 
 ## 1. Introduction
 
