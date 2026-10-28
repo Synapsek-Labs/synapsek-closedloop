@@ -161,7 +161,7 @@ def main(n_problems=250, n_per=2, seed=41):
         (OUT / "traces.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     print(f"[proto] {len(rows)} traces, base solve rate "
           f"{sum(r['correct'] for r in rows)/len(rows):.1%}")
-    taus = [0.5, 0.6, 0.7, 0.8, 0.9]
+    taus = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]
     baseline, results = simulate(rows, clf, tok, model, taus)
     print(f"[proto] UNMONITORED baseline: solve {baseline['solve_rate']:.1%}, "
           f"{baseline['tokens_per_correct']} tokens/correct")
