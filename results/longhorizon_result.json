@@ -1,0 +1,41 @@
+{
+  "val_auroc": 0.9938497930218806,
+  "layer": 20,
+  "results": {
+    "0.3": {
+      "unmonitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 28935.64285714286
+      },
+      "monitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 11770.142857142857,
+        "aborts": 300
+      }
+    },
+    "0.5": {
+      "unmonitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 28935.64285714286
+      },
+      "monitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 11851.714285714286,
+        "aborts": 300
+      }
+    },
+    "0.7": {
+      "unmonitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 28935.64285714286
+      },
+      "monitored": {
+        "solve": 0.04666666666666667,
+        "tokens_per_correct": 12184.07142857143,
+        "aborts": 300
+      }
+    }
+  },
+  "n_cal": 300,
+  "n_test": 300
+}
