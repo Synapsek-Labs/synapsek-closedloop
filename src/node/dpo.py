@@ -21,23 +21,34 @@ from src.node.nightly import (NODE_DIR, to_sft_text, make_workload,
 
 
 def dpo_pairs(rows):
-    """Same-task (chosen_turns, rejected_turns) pairs, serialized."""
+    """Same-task preference pairs. Pre-registered preference key:
+    (success, first_mistake position; success = survived to the end).
+    Cycle-4 evidence: greedy vs sampled agree too much (3 success/fail
+    disagreements in 80 tasks) -> pair on first-mistake depth instead:
+    any two rollouts of one task with different (success, first_mistake)
+    form a zero-judge contrastive pair."""
     kb, people = build_kb()
     by_id = {t["id"]: t for t in hop_paths(kb, people, n=1000, seed=11)}
-    ok = [r for r in rows if r["success"]]
-    bad = [r for r in rows if not r["success"]]
-    by_task_bad = {}
-    for r in bad:
-        by_task_bad.setdefault(r["task_id"], []).append(r)
+
+    def key(r):
+        return (1 if r["success"] else 0,
+                r["first_mistake"] if r["first_mistake"] != -1 else 999)
+
+    by_task = {}
+    for r in rows:
+        by_task.setdefault(r["task_id"], []).append(r)
     pairs = []
-    for r in ok:
-        cands = by_task_bad.get(r["task_id"])
-        if not cands:
+    for tid, rlist in by_task.items():
+        if tid not in by_id or len(rlist) < 2:
             continue
-        t = by_id[r["task_id"]]
-        chosen = to_sft_text(t, r["turns"])          # [(prompt, target), ...]
-        rej = to_sft_text(t, cands[0]["turns"])
-        if len(chosen) != len(rej):
+        rlist = sorted(rlist, key=key)
+        lo, hi = rlist[0], rlist[-1]
+        if key(lo) == key(hi):
+            continue
+        t = by_id[tid]
+        chosen = to_sft_text(t, hi["turns"])
+        rej = to_sft_text(t, lo["turns"])
+        if not chosen or not rej:
             continue
         pairs.append((chosen, rej))
     return pairs
