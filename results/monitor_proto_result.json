@@ -1,0 +1,53 @@
+{
+  "baseline": {
+    "solve_rate": 0.432,
+    "tokens_per_correct": 646
+  },
+  "monitored": {
+    "0.05": {
+      "solve_rate_kept": 0.368,
+      "tokens_per_correct": 651,
+      "aborted": 131,
+      "tokens_saved_on_wrong": 14784
+    },
+    "0.1": {
+      "solve_rate_kept": 0.394,
+      "tokens_per_correct": 645,
+      "aborted": 85,
+      "tokens_saved_on_wrong": 9765
+    },
+    "0.15": {
+      "solve_rate_kept": 0.406,
+      "tokens_per_correct": 640,
+      "aborted": 70,
+      "tokens_saved_on_wrong": 7848
+    },
+    "0.2": {
+      "solve_rate_kept": 0.414,
+      "tokens_per_correct": 638,
+      "aborted": 58,
+      "tokens_saved_on_wrong": 6477
+    },
+    "0.3": {
+      "solve_rate_kept": 0.418,
+      "tokens_per_correct": 644,
+      "aborted": 43,
+      "tokens_saved_on_wrong": 3913
+    },
+    "0.4": {
+      "solve_rate_kept": 0.43,
+      "tokens_per_correct": 636,
+      "aborted": 23,
+      "tokens_saved_on_wrong": 2854
+    },
+    "0.5": {
+      "solve_rate_kept": 0.43,
+      "tokens_per_correct": 639,
+      "aborted": 19,
+      "tokens_saved_on_wrong": 2150
+    }
+  },
+  "n_traces": 500,
+  "mon_layer": 15,
+  "seed": 41
+}
