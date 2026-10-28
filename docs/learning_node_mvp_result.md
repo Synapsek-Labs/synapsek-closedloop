@@ -65,3 +65,34 @@ capacity; small-n noise (41 trajectories). Per pre-registration, the next
 branch is a 32B teacher (RunPod burst ~$5) BEFORE any final STOP — but the
 prior on node-learning producing positive deltas is now low; the monitor +
 gate ship remains the validated core.
+
+## Addendum 2: DIAGNOSIS of the teacher-data rejection (2026-10-28)
+
+Question: why did the 7B-teacher delta gate at 15% (worse than self-data)?
+
+Findings (diag_teacher.py, diag_teacher2.py):
+1. Teacher "success" trajectories contain mid-chain NOT FOUND wandering
+   (e.g. lookup(Goldleaf)->NOT FOUND, lookup("CEO of Vertex")->NOT FOUND
+   inside a SUCCESS). The success criterion checks only the final answer,
+   so noisy paths pass verification.
+2. HARD NUMBER: across 89 verified successes (41 teacher + 48 student),
+   ZERO are clean-minimal (no NOT FOUND/junk, length <= hops+1). 100% of
+   the SFT data in every cycle taught wandering that happened to end
+   correctly. This explains all gate rejections uniformly — self-data
+   AND teacher-data fail for the same structural reason.
+3. The testbed also admits a role-hop skip (lookup precedence makes
+   person->company->city reachable without the role hop), so the gold
+   path is only loosely defined.
+
+CONCLUSION: the multi-turn lookup testbed is a poor SFT substrate — its
+reward is too gameable and NO clean demonstrations exist to imitate.
+This is a WORKLOAD defect, not a teacher defect and not evidence against
+teacher-gated distillation per se.
+
+REGISTERED FIX (pre-registered before running): switch the node workload
+to single-shot execution-verified tasks (the 662-problem PoT bank from
+src/loop/synthesizer.py + SVD machinery). A program-of-thought attempt is
+one generation — no multi-turn wandering possible — and verification is
+hard execution matching, not a gameable final-answer check. Then retry
+teacher-SFT (7B teacher, local, $0) on that substrate. Only if that also
+fails the gate does the 32B RunPod teacher (or a STOP) come into play.
