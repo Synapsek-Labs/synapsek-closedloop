@@ -51,7 +51,31 @@ stake it precisely.
 from their own verified trajectories (incl. failure annotation), with verification-gated
 federated merging and forgetting checks. No published system does this end-to-end.
 
-## 4. Standing conclusions for Synapsek
+## 5. Agent runtime self-monitoring / early abort — **OCCUPIED, hot (checked 2026-10-28)**
+
+- **FailFast-RestartSmart** (arXiv:2608.03222): 0.6B monitor predicts failure from
+  observable prefixes; restart raises SWE-bench resolve 66.6→71.8%, saves 14.6–20.4%
+  tokens. Directly overlaps our abort+restart demo concept.
+- **Doomed from the Start** (arXiv:2607.06503): linear probes on hidden states predict
+  eventual task failure from round 1; recall-controlled abort cascade. This is very
+  close to our loc_cum monitor — our differentiator vs them must be stated carefully.
+- **OnTrack** (arXiv:2610.12375): streaming structural monitoring (optimal transport vs
+  reference runs), ~1 ms/step, saves ~18% compute, 83% abort precision.
+- **Real-Time Detection and Repair** (arXiv:2608.02464): µs-scale telemetry monitors +
+  deterministic verification + rollback repair; 52→73% task success on local agents
+  (qwen2.5 7b/3b, llama3.1 8b).
+- Context: Self-Healing Orchestrators (2606.01416), FIRE (2609.26048), Semantic
+  Early-Stopping (2606.27009), prompt-induced waste studies (2608.01347).
+
+**Residual novelty for Synapsek:** NOT the monitor mechanism itself (occupied, and
+published results beat our 1.5% short-CoT prototype by an order of magnitude on their
+benchmarks). Open: the SYSTEM integration — on-device Learning Nodes that (a) train
+their monitor nightly from their own verified trajectories, (b) federate
+verification-gated deltas, (c) self-monitor at deployment with zero extra inference
+cost. Also open: first-mistake LOCALIZATION (cumulative 0.92 is ours, but pinpointing
++ abort cascades are published). Claims must cite all five works above.
+
+## 6. Standing conclusions for Synapsek (updated 2026-10-28)
 
 1. Our strongest defensible claim is the **integration**: open-weights forensics ->
    closed-loop curriculum -> failure-first data -> learning-node federation, as one
