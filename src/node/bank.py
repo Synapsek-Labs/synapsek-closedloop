@@ -36,8 +36,12 @@ def _save(node_id, entries):
         json.dumps(entries, indent=1), encoding="utf-8")
 
 
-def add_to_bank(node_id, delta_dir, name, probe_n=40, seed=11,
+def add_to_bank(node_id, delta_dir, name, probe_n=100, seed=11,
                 require_positive=True):
+    # NOTE (2026-10-29): a 40-problem probe admitted a delta at +15% that
+    # the full 100-problem gate measured at -1% (docs: v2 plan, shinobi
+    # replication). Small slices swing too much — admission now defaults
+    # to the full battery size.
     """Evaluate a candidate adapter against base on a probe slice; register
     it ONLY if it doesn't hurt. The adapter is stored as a bank entry —
     the base model is never touched."""

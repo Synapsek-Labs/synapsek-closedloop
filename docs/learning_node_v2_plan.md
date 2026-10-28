@@ -84,3 +84,23 @@ modified; a rejected adapter simply never gets routed to (rejection is
 structurally free); federation across nodes = exchanging bank entries.
 Next: nightly cycle produces bank entries via the validated replay-mix
 recipe; re-gate the replay delta on shinobi when its GPU frees up.
+
+## Shinobi replication (2026-10-29): NOT CONFIRMED — honest record
+
+Full gate on shinobi with a locally retrained replay-mix delta (same 152
+teacher programs, replay re-sampled on shinobi hardware):
+- base 48.0% vs delta 47.0% -> REJECT (neutral, -1%)
+- The pod's +3% did not replicate. n=100 swings ~+/-5%: the pod result was
+  likely noise, or hardware/quantization-specific (bnb 4-bit rounding
+  differs 5080 cu13 vs 5090 cu128; replay sampling differs per device).
+- Bank admission bug caught and fixed: the 40-problem probe admitted the
+  delta at +15% that the full gate measured at -1% — probe slices are too
+  noisy; add_to_bank now defaults to the full 100-problem battery.
+
+STATUS: the regime fix remains the best lead (7 rejections -> 1 neutral/
+tentative accept), but the effect size is small and unconfirmed. Next
+registered lever, in order: (1) MORE data — collect 300-400 verified
+teacher programs (pool supports it; LIMO: data volume/quality drives small
+SFT), (2) delta scale-down (multiply LoRA B by 0.5 at merge time in the
+bank wrapper — tunable post-hoc WITHOUT retraining), (3) 32B RunPod
+teacher (~$5). Bank architecture unchanged: rejections stay free.
