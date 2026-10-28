@@ -25,6 +25,36 @@
 4-bit) + optional merged bf16 releases. "Super capable": the swarm
 recipe + multi-domain verified data + bank, not magic.
 
+## ORDER (user direction 2026-10-29): MODEL FIRST, nodes second
+
+The starting model must be fully capable BEFORE the node network
+launches — Hebri agents get a good day-one model, the swarm then
+makes it better. Reordered gates:
+
+- **M1 (now): multi-domain verified data** — second domain
+  (SVAMP/MATH-easy) AND an AGENT domain: execution-verified
+  tool-call trajectories (the verifier is the tool actually
+  running). Agent capability = tool-use + instruction following +
+  code; all three are execution-verifiable, so the zero-noise
+  recipe applies to the AGENT SKILLS specifically, not just math.
+- **M2 (the release): Synapsek Auto 1.5B v0** — merged, tested on
+  every domain + an agent-task smoke battery (tool-calls execute,
+  answers correct). Ship as Hebri's default local model.
+- **M3: 32B/235B-class teacher bursts** to deepen the corpus.
+- Node network launches only AFTER M2 passes.
+
+## MoE / "colibri 1T-3B-active" note
+
+Running a true 1T-total/3B-active MoE (Qwen3-235B, GLM-4.5, DeepSeek-V3
+class) needs ALL experts resident (~400-700GB) — node hardware cannot
+hold it; pod bursts can serve it as the top escalation tier only.
+BUT the same PRINCIPLE (sparse activation: small always-on core +
+routed specialists) is exactly what our adapter BANK already is:
+a frozen small base with routed expert adapters chosen per task.
+Synapsek Auto = the sparse-activation idea realized at node scale:
+always-on base + swarm-trained expert bank, escalation to big MoE
+models on burst pods when needed.
+
 ## Registered phases (pre-registered gates, shinobi-first, $0)
 
 - **M1 (multi-domain transfer, also the science replication):** add a
