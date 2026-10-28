@@ -214,6 +214,32 @@ DOI / endorsement path) and deferred it to launch time. arXiv needs an endorser 
 |---|---|
 | ai-engineer main model | `z-ai/glm-5.3-flash` → **`z-ai/glm-5.3`** ($0.0699 in / $1.40 out per M, 1,048,576 ctx) |
 | `auxiliary.background_review.enabled` | `true` → **`false`** (stops the loop) |
-| Bot Chat session | `20261027_145924_21d329` retitled + archived; fresh Bot Chat minted |
+| Bot Chat session | **NOT reset** — `hermes sessions rename` refuses: a canonical Bot Chat's name IS its identity, and renaming would orphan the conversation. The supported fresh-start is `/compact` inside the chat, or a new bot. See §11. |
 | shinobi checkout | synced to Mac HEAD |
 | backups | `~/synapsek-backups/ai-engineer-20261029/` (deliberately outside the public repo) |
+---
+
+## 11. How to actually reset the Bot Chat (do not try to rename it)
+
+A Bot Chat's session title **is** its identity — `(profile, session titled exactly "Bot Chat")`.
+`hermes sessions rename` refuses it outright:
+
+> This is the bot's canonical Bot Chat — its name is its identity, and renaming it would
+> orphan the conversation. To start fresh, create a new bot instead.
+
+Do **not** edit `sessions.title` in state.db to work around that guard. The guard exists because
+title surgery is what caused the 2026-08 infinite-fork loop.
+
+The three legitimate options:
+
+1. **`/compact` inside the chat (recommended).** The composer middleware reroutes `/new` to
+   `/compact` in a canonical Bot Chat — "fresh working context, SAME conversation". The todo list,
+   memory and history survive; only the working context is compressed. This is the intended fix for
+   the 147K-token prompt bloat.
+2. **A new bot** (new profile) — a genuinely separate agent with its own memory, skills and
+   session. Use when you want a clean identity, not just a cleaned context.
+3. **A side-chat** ("New chat with this agent") — a visible scratch session, not the row's target.
+
+Do not kill the profile's `serve` backend to force a reload. The desktop app owns that process;
+terminating it takes the whole app down (see the 2026-10-29 10:31 incident) and it is respawned on
+demand anyway. A config change lands on the next turn.
