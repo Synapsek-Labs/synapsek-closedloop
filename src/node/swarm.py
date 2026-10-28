@@ -40,6 +40,32 @@ def ensure_keys(node_id):
     return sk, sk.public_key().public_bytes_raw().hex()
 
 
+def _teacher_id(node_id) -> str:
+    """Most common teacher_id in this node's verified work file (provenance)."""
+    from collections import Counter
+    wf = None
+    for cand in (_node_dir(node_id).glob("work*.jsonl"),
+                 _node_dir(node_id).glob("*.jsonl")):
+        hits = sorted(cand)
+        if hits:
+            wf = hits[0]
+            break
+    if not wf:
+        return "unknown"
+    ids = Counter()
+    for line in wf.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            t = json.loads(line).get("teacher_id")
+            if t:
+                ids[t] += 1
+        except (json.JSONDecodeError, AttributeError):
+            continue
+    return ids.most_common(1)[0][0] if ids else "unknown"
+
+
 def _b64(p: Path) -> str:
     return base64.b64encode(p.read_bytes()).decode()
 
@@ -69,7 +95,9 @@ def export_entry(node_id, name, registry_dir="swarm_registry"):
         "adapter": {"format": "peft-lora", "sha256": None, "b64": None},
         "gain": {"metric": "pot-battery", "n": e["probe_n"],
                  "base_acc": e["base_acc"], "adapter_acc": e["adapter_acc"]},
-        "data_provenance": {"source": "teacher-7B-pot",
+        "data_provenance": {"source": "pot-teacher",
+                            "teacher_id": _teacher_id(node_id),
+                            "n_verified": e.get("n_train_pairs", 0),
                             "verifier": "execution-vs-gold"},
         "node_id": node_id,
         "exported_at": time.strftime("%Y-%m-%d %H:%M"),

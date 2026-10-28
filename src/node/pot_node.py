@@ -36,7 +36,7 @@ def _ensure_split():
 
 def collect_teacher_pot(node_id, n_target=150, max_problems=600, seed=7):
     """Teacher writes one PoT program per problem; keep execution-verified ones."""
-    from src.node.teacher import load_teacher
+    from src.node.teacher import load_teacher, TEACHER as TEACHER_ID
     pool, held = _ensure_split()
     rng = random.Random(seed)
     work = rng.sample(pool, min(max_problems, len(pool)))
@@ -63,7 +63,8 @@ def collect_teacher_pot(node_id, n_target=150, max_problems=600, seed=7):
                     abs(number - gold) < 1e-4:
                 rows.append({"id": p["id"], "question": p["question"],
                              "answer": p["answer"], "program": code,
-                             "teacher": True})
+                             "teacher": True,
+                             "teacher_id": TEACHER_ID})
         done += len(chunk)
         print(f"[pot] {done}/{len(work)} problems, {len(rows)} verified "
               f"programs", flush=True)
