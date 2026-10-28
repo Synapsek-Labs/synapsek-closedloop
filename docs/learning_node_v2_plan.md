@@ -70,3 +70,17 @@ Ops banked: update-pod restarts WIPED the container (lost first adapter,
 retrained); RunPod proxy blocks sftp/scp -O/port-forwarding; run compute
 on pod via git-cloned repo + nohup; pull results through the PTY (verdict
 lines) before touching pod config.
+
+## Bank smoke PASSED (2026-10-28 night, RunPod 5080 burst #2, ~$0.15, pod deleted)
+
+End-to-end plumbing verified on real GPU (src/node/bank_smoke.py):
+student-generated verified programs -> tiny replay-mix adapter ->
+add_to_bank probe gate (base 37.5% vs adapter 43.75% on n=16 -> ADMITTED,
+gain +6.25%) -> route() -> load_routed returns a WRAPPED PeftModel
+(never merged) -> registry re-add semantics OK.
+
+The adapter bank is the Learning Node v2 core: the base model is never
+modified; a rejected adapter simply never gets routed to (rejection is
+structurally free); federation across nodes = exchanging bank entries.
+Next: nightly cycle produces bank entries via the validated replay-mix
+recipe; re-gate the replay delta on shinobi when its GPU frees up.
