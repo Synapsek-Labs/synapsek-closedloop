@@ -55,16 +55,26 @@ def dpo_pairs(rows):
 
 
 def _seq_logprob(model, tok, prompt, target):
-    """Sum of target-token logprobs for one (prompt, target)."""
+    """Differentiable sum of target-token logprobs for one (prompt, target)."""
     p_ids = tok(prompt, return_tensors="pt", truncation=True,
                 max_length=2048).input_ids
     full = tok(prompt + target, return_tensors="pt", truncation=True,
                max_length=2048).input_ids.to("cuda:0")
     labels = full.clone()
-    labels[:, :p_ids.shape[1]] = -100
-    out = model(input_ids=full, labels=labels)
-    n = int((labels != -100).sum().item())
-    return -out.loss.item() * n
+    n_prompt = p_ids.shape[1]
+    logits = model(input_ids=full).logits[:, :-1, :]
+    tgt = full[:, 1:]
+    logprobs = torch.log_softmax(logits.float(), dim=-1)
+    tok_lp = logprobs.gather(-1, tgt.unsqueeze(-1)).squeeze(-1)
+    mask = torch.zeros_like(tgt, dtype=torch.bool)
+    mask[:, max(0, n_prompt - 1):] = True
+    return (tok_lp * mask).sum()
+
+
+def _seq_logprob_ref(model, tok, prompt, target):
+    """No-grad scalar reference logprob (base model)."""
+    with torch.no_grad():
+        return _seq_logprob(model, tok, prompt, target).item()
 
 
 def train_delta_dpo(node_id, rows, beta=0.1, n_epochs=1, lr=5e-5, seed=7):
@@ -77,10 +87,9 @@ def train_delta_dpo(node_id, rows, beta=0.1, n_epochs=1, lr=5e-5, seed=7):
 
     # 1) reference logprobs with the pristine base model (frozen, no adapter)
     ref = {}
-    with torch.no_grad():
-        for i, (chosen, rej) in enumerate(pairs):
-            for prompt, target in chosen + rej:
-                ref[(i, prompt, target)] = _seq_logprob(base, tok, prompt, target)
+    for i, (chosen, rej) in enumerate(pairs):
+        for prompt, target in chosen + rej:
+            ref[(i, prompt, target)] = _seq_logprob_ref(base, tok, prompt, target)
 
     # 2) attach LoRA, train DPO
     cfg = LoraConfig(r=32, lora_alpha=64, lora_dropout=0.05,
@@ -96,10 +105,14 @@ def train_delta_dpo(node_id, rows, beta=0.1, n_epochs=1, lr=5e-5, seed=7):
             chosen, rej = pairs[i]
             pc = sum(_seq_logprob(model, tok, p, t) for p, t in chosen)
             pr = sum(_seq_logprob(model, tok, p, t) for p, t in rej)
-            rc = sum(ref[(i, p, t)] for p, t in chosen)
-            rr = sum(ref[(i, p, t)] for p, t in rej)
+            rc = ref[(i, chosen[0][0], chosen[0][1])]
+            for p, t in chosen[1:]:
+                rc = rc + ref[(i, p, t)]
+            rr = ref[(i, rej[0][0], rej[0][1])]
+            for p, t in rej[1:]:
+                rr = rr + ref[(i, p, t)]
             loss = -torch.nn.functional.logsigmoid(
-                torch.tensor(beta * ((pc - rc) - (pr - rr)), device="cuda:0"))
+                beta * ((pc - rc) - (pr - rr)))
             loss.backward()
             opt.step(); opt.zero_grad()
     d = NODE_DIR / node_id
