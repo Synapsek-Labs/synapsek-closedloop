@@ -120,6 +120,8 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
     tok.padding_side = "left"
 
     def solve(model, tok):
+        from src.loop.pot_runner import run_one
+        from src.loop.synthesizer import _extract_code
         acc = 0
         B = 16
         for i in range(0, len(tasks), B):
@@ -132,7 +134,13 @@ def gate_pot(node_id, delta_dir, n_eval=100, margin=0.02, seed=7):
             for j, t in enumerate(chunk):
                 text = tok.decode(out[j][ids["input_ids"].shape[1]:],
                                   skip_special_tokens=True)
-                if is_correct(text, t["answer"]):
+                code = _extract_code(text)
+                if not code:
+                    continue
+                ok, number = run_one(code)
+                gold = extract_last_number(t["answer"])
+                if ok and number is not None and gold is not None and \
+                        abs(number - gold) < 1e-4:
                     acc += 1
         return acc / len(tasks)
 

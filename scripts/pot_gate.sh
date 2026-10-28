@@ -1,0 +1,4 @@
+#!/bin/bash
+# Launch the gate DETACHED on shinobi (PowerShell Start-Process), ssh returns immediately.
+# Result lands in runs/node/shinobi-1/gate_pot.json; log in gate_log.txt.
+ssh shinobi "cd C:\Users\User\synapsek-closedloop && powershell -Command \"Start-Process -WindowStyle Hidden -FilePath 'C:\Users\User\synapsek-closedloop\.venv\Scripts\python.exe' -ArgumentList '-u','-m','src.node.pot_node','--node','shinobi-1','--gate-only' -WorkingDirectory 'C:\Users\User\synapsek-closedloop' -RedirectStandardOutput 'C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\gate_log.txt' -RedirectStandardError 'C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\gate_err.txt'\" && echo DETACHED"
