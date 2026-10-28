@@ -51,3 +51,17 @@ from their own verified rollouts with LoRA-scale updates.
   negatives all share the confound "student = data source".
 - Recovery-trajectory training (DeepSeek alternative #5) remains
   unexplored and is distinct from plain SFT.
+
+## Addendum: teacher-gated distillation kill-test (2026-10-28, later)
+Single-variable A/B: student (1.5B), recipe, workload, gate all identical to
+the rejected self-SFT cycle; ONLY the data source changed (Qwen2.5-7B-Instruct
+teacher, greedy, same exemplar, same GPU).
+- Teacher yield: 41/100 verified successes (41% solve vs student's 27-32%)
+- Gate: base 30.0% vs delta 15.0% -> REJECT (WORSE than self-data's 21.7%)
+Interpretation: data SOURCE is not the (only) confound. Plausible factors:
+teacher trajectories exploit the testbed's permissive success semantics
+differently; stylistic mismatch between 7B greedy paths and 1.5B policy
+capacity; small-n noise (41 trajectories). Per pre-registration, the next
+branch is a 32B teacher (RunPod burst ~$5) BEFORE any final STOP — but the
+prior on node-learning producing positive deltas is now low; the monitor +
+gate ship remains the validated core.
