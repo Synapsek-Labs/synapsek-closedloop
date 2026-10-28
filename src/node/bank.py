@@ -11,11 +11,11 @@ from __future__ import annotations
 import json, random, time
 from pathlib import Path
 
-from src.node.nightly import NODE_DIR
+import src.node.nightly as _nightly
 
 
 def _bank_dir(node_id):
-    d = NODE_DIR / node_id / "bank"
+    d = _nightly.NODE_DIR / node_id / "bank"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -109,7 +109,7 @@ def load_routed(node_id, capability=None):
     tok.padding_side = "left"
     if entry is None:
         return tok, model, None
-    ad = NODE_DIR / node_id / entry["delta"]
+    ad = _nightly.NODE_DIR / node_id / entry["delta"]
     model = PeftModel.from_pretrained(model, str(ad))
     model.eval()
     return tok, model, entry
