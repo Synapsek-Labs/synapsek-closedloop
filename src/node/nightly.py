@@ -45,23 +45,13 @@ def set_exemplar(kb):
 
 
 # ---------------------------------------------------------------- workload
-def make_workload(kb, people, n, seed=7, max_hops=2):
-    """Daily workload: 2-hop tasks (first two hops of gold chains) + one-shot
-    exemplar + greedy decoding. First-cycle evidence: 3-hop @ temp0.7 -> 2%
-    solve; format failures dominate, so shorten + demonstrate the format."""
-    raw = hop_paths(kb, people, n=n * 3, seed=seed)
-    short = []
-    for t in raw:
-        if t["n_hops"] <= max_hops:
-            short.append(t)
-            continue
-        hops = t["hops"][:max_hops]
-        short.append({"id": t["id"] + "s", "hops": hops,
-                      "answer": hops[-1][1], "start": t["start"],
-                      "n_hops": len(hops)})
-        if len(short) >= n:
-            break
-    return short
+def make_workload(kb, people, n, seed=7, max_hops=3):
+    """Daily workload: FULL 3-hop chains only. Cycle-2 evidence: truncating
+    to 2 hops makes answers UNREACHABLE (lookup returns works_at first, so a
+    person's role can never be observed) -> 0/60. Reachable answers are the
+    original chain endpoints (year_founded, hq_city, city). Yield levers that
+    are safe: one-shot exemplar + greedy decoding (format, not reachability)."""
+    return hop_paths(kb, people, n=n, seed=seed)
 
 
 def collect(node_id, n_work=60, seed=7):
