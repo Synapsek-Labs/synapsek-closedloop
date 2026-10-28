@@ -169,7 +169,9 @@ if __name__ == "__main__":
     else:
         rows = collect_pairs(a.node, a.tasks)
     ad = train_delta_dpo(a.node, rows)
-    if ad is not None:
-        gate(a.node, ad, a.gate_n)
-        if not a.skip_sync:
-            sync(a.node)
+    if ad is None:
+        print("[node] no DPO delta -> stopping (gate runs as a separate process)")
+        sys.exit(0)
+    # Gate in a FRESH process: the DPO pass leaves the CUDA allocator near
+    # capacity and a same-process gate eval crawled for >1h (cycle-5 evidence).
+    print(f"[node] delta saved at {ad} -> run gate separately")
