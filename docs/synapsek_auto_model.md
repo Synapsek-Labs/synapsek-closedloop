@@ -43,17 +43,33 @@ makes it better. Reordered gates:
 - **M3: 32B/235B-class teacher bursts** to deepen the corpus.
 - Node network launches only AFTER M2 passes.
 
-## MoE / "colibri 1T-3B-active" note
+## MoE / colibri (CORRECTED after reading JustVugg/colibri, 2026-10-29)
 
-Running a true 1T-total/3B-active MoE (Qwen3-235B, GLM-4.5, DeepSeek-V3
-class) needs ALL experts resident (~400-700GB) — node hardware cannot
-hold it; pod bursts can serve it as the top escalation tier only.
-BUT the same PRINCIPLE (sparse activation: small always-on core +
-routed specialists) is exactly what our adapter BANK already is:
-a frozen small base with routed expert adapters chosen per task.
-Synapsek Auto = the sparse-activation idea realized at node scale:
-always-on base + swarm-trained expert bank, escalation to big MoE
-models on burst pods when needed.
+I was wrong that big MoE needs all experts resident: colibri
+(Apache-2.0, pure C, 44k stars) runs 744B MoE models with ~10GB RAM
+by STREAMING experts from disk on demand — CPU only, no GPU, runs
+GLM-5.2/5.3, DeepSeek V4, Qwen3.8, Kimi K3 etc. on ordinary machines.
+This changes the Synapsek Auto architecture:
+
+- **The colibri ladder rung is real**: Synapsek Auto = small dense
+  core (agent control, instant, always on) -> SAME MACHINE escalates
+  to a frontier MoE streamed from local disk via colibri (user
+  downloads weights once, ~20-60GB for the useful slice, zero API
+  tokens) -> swarm nodes -> burst pods. Frontier capability without
+  recurring cost, exactly the user's "colibri-like system" vision.
+- **Sparse activation at THREE levels**: adapter bank (node scale),
+  expert streaming (machine scale), MoE (model scale). Same principle,
+  three sizes.
+- **Training angle**: colibri solves RUNNING; our verified-data
+  recipe solves IMPROVING. Open question worth registering: can we
+  fine-tune/stream individual EXPERTS (a swarm node contributes an
+  improved expert for a domain, shipped and streamed like colibri
+  experts)? If yes, the swarm's unit of exchange grows from LoRA
+  adapters to MoE experts — same SWAP manifest, bigger payload.
+  Registered as M5 (research bet, do not block M1/M2).
+- Priority stays M1 -> M2: capable small core first; colibri
+  integration is an escalation-tier integration task (wrap `coli
+  chat`-style engine behind the router's "escalate" branch).
 
 ## Registered phases (pre-registered gates, shinobi-first, $0)
 
