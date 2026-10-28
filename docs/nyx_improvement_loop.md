@@ -63,3 +63,22 @@ registered as the step AFTER the curriculum loop shows gains.
 - Tune the gate after verdicts. No threshold shopping.
 - Claim benchmark wins from models that memorized the test set:
   held-out slices stay held out, published nulls stay published.
+
+## First loop data point (2026-10-29): SVAMP REJECT — the failure-band law
+
+M1a/M1b on SVAMP (easy arithmetic word problems): 407 verified
+programs (77% yield), replay-train 307+307 pairs -> gate: base 79.0%
+vs delta 69.0% REJECT (-10%).
+
+LAW LEARNED: small-data verified SFT only pays when the base sits in
+the FAILURE BAND (~40-70% accuracy). Above ~75% there is no headroom
+and the update is pure noise/forgetting risk. Below ~40% the teacher
+and student both struggle (GSM8K teacher yield dropped there too).
+
+=> Domain selection rule for all future collection: pick batteries
+where base accuracy is 40-70%. SVAMP fails this (79%). Next domain
+candidates: MATH-easy subsets (base expected ~45-60%), GSM-Hard.
+
+This is the loop's error-taxonomy step working at the DOMAIN level:
+the baseline eval told us the domain has nothing to teach before we
+wasted more data on it.
