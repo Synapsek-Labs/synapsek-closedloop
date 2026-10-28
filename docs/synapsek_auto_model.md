@@ -43,6 +43,32 @@ recipe + multi-domain verified data + bank, not magic.
 - **M4 (compression):** 4-bit ship is already proven; optional:
   pruning/distillation pass IF a customer case demands smaller.
 
+## Teacher strategy (2026-10-29, user direction): best open Chinese model as the well
+
+The existence proof: DeepSeek-R1-Distill-Qwen-1.5B was built by
+distilling a frontier open model into the SAME Qwen 1.5B base we use —
+and it beat much larger models on math benchmarks. Distillation of a
+frontier-adjacent open teacher into small bases is exactly how
+"small but top" is made.
+
+- Teacher ladder (license-clean, open weights only, never API):
+  Qwen2.5-7B (current, shinobi) -> Qwen3-32B / R1-Distill-Qwen-32B
+  (pod ~$5 burst) -> biggest open model that fits burst budgets
+  (R1-0528 / Qwen3-235B-class via multi-GPU pods when a domain
+  warrants it).
+- Trust/"obliterate the phone-home" concern: model WEIGHTS are inert
+  data — server connections come from app/serving code, not tensors.
+  Our stack is fully local (transformers/vLLM on the user's own
+  machine); we audit the serving path, ship no telemetry, and every
+  SWAP artifact carries provenance so receivers know exactly what
+  they adopted. Synapsek Auto = open Chinese excellence, cleaned,
+  verified, and improved by the swarm.
+- Honest ceiling: distillation makes small models frontier-CALIBER on
+  the verified domains we train (math/code/structured tasks); it does
+  not make a 1.5B equal a frontier model on open-ended general chat.
+  Our pitch is capability-per-watt + trust + self-improvement, not
+  raw scale.
+
 ## What makes it "first AI" quality
 
 The moat is not weights — it is (1) the verified-data flywheel
