@@ -96,3 +96,29 @@ one generation — no multi-turn wandering possible — and verification is
 hard execution matching, not a gameable final-answer check. Then retry
 teacher-SFT (7B teacher, local, $0) on that substrate. Only if that also
 fails the gate does the 32B RunPod teacher (or a STOP) come into play.
+
+## Addendum 3: PoT-teacher gate verdict (2026-10-28, corrected metric)
+
+Setup per Addendum 2 fix: single-shot PoT on GSM8K train pool, 7B teacher,
+152 execution-verified programs (~69% teacher yield — wandering eliminated),
+student SFT (1 epoch, lr 5e-5, r=32), gate = 100 held-out battery problems,
+program EXECUTION vs gold (earlier text-scored verdict discarded as invalid).
+
+- base 48.0% vs delta 46.0% -> REJECT (-2%, 6th rejection overall)
+- Base sanity-checks against the known ~51.5% bar: the metric is valid.
+
+Ops lessons banked: shinobi CPU is shared (other Hebri job + TRCC + WSL at
+~80% load) — CPU-bound program exec must use the isolated pot_runner
+subprocess (in-process exec GIL-deadlocked a 2h eval); results files parse
+line-tolerantly; detached runs need schtasks (OpenSSH kills console children).
+
+INTERPRETATION: with the workload defect fixed and the metric validated,
+teacher-gated SFT STILL fails: ~150 verified examples via r=32 LoRA do not
+improve Qwen2.5-1.5B PoT on GSM8K — they slightly degrade. Consistent with
+the entire week: small-model improvement via small-SFT on verified data is
+negative across every substrate (self-agent, lookup-testbed, teacher-PoT)
+and every data source (self, 7B teacher).
+
+Remaining pre-registered branch: 32B teacher on RunPod (~$5). Prior is now
+low (~15%); the burden shifts to showing WHY a bigger teacher changes the
+outcome when the failure is symmetric across teachers. Decision pending.
