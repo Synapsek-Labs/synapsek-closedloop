@@ -5,6 +5,19 @@ import json, random, re, sys
 from src.node.pot_node import POT_PROMPT, _extract_code, run_one, extract_last_number
 from src.node.teacher import load_teacher, TEACHER
 
+# Static hang filter — pitfall from HANDOFF §3: a CPU-bound infinite loop in
+# generated code leaks a GIL-hogging daemon thread in run_one (thread cannot be
+# killed) and wedges the collection run silently.
+import re as _re
+
+_HANG_RE = _re.compile(r"input\(|while\s+True|time\.sleep|sleep\(", _re.IGNORECASE)
+
+
+def _safe_run_one(code):
+    if _HANG_RE.search(code):
+        return False, None
+    return run_one(code)
+
 
 def _numeric(s):
     """Gold is usable only if a float can be extracted from \\boxed{...}."""
@@ -76,7 +89,7 @@ def collect_math_pot(node_id, target=400, max_problems=1200, seed=7, batch=16):
             code = _extract_code(text)
             if not code:
                 continue
-            ok, number = run_one(code)
+            ok, number = _safe_run_one(code)
             gold = extract_last_number(p["answer"])
             if ok and number is not None and gold is not None and \
                     abs(number - gold) < 1e-4:
