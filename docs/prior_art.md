@@ -104,3 +104,10 @@ cost. Also open: first-mistake LOCALIZATION (cumulative 0.92 is ours, but pinpoi
    has an advantage no probe method offers (zero extra inference cost at runtime).
 4. Monitor weekly: this landscape changed within the last ~4 months; re-check before
    every external claim.
+
+## 6. Federated LoRA aggregation (checked 2026-10-28, Learning Node gate)
+- FedLoRAGuard (EMNLP 2026): adapter integrity/backdoor verification, not improvement gating.
+- FC-MoE (arXiv:2606.15625): conflict-aware MoE federated fine-tuning, gradient consensus.
+- iFLoRA (ACL 2026): pipelined error-mitigated LoRA aggregation, matrix-wise freezing.
+- Forward Intelligence Grid: commercial promotion gate (held-out completion before serving promotion) — single-org pipeline, not peer federation.
+- **Verdict:** aggregation/privacy/integrity = OCCUPIED. NOT occupied: peer nodes exchanging weight deltas derived from execution-verified agent trajectories, gated by receiver-side held-out re-verification. Learning Node MVP builds exactly this.
