@@ -56,17 +56,22 @@ def models():
     return {"object": "list", "data": [{"id": MODEL_ID, "object": "model"}]}
 
 
-# Hermes-style tool call blocks used by Qwen chat templates.
+# Qwen emits either Hermes JSON <tool_call {...}> blocks or legacy XML
+# <function=NAME><parameter=K>V</parameter> blocks. Parse both.
 TC_O = "<" + "tool_call>"
 TC_C = "</" + "tool_call>"
+TC_JSON = re.compile(re.escape(TC_O) + r"\s*(\{.*?\})\s*" + re.escape(TC_C),
+                     re.DOTALL)
+TC_XML = re.compile(r"<function=([^>\s]+)>(.*?)", re.DOTALL)
+TC_PAR = re.compile(r"<parameter=([^>\s]+)>(.*?)", re.DOTALL)
 
 
 def _parse_tool_calls(text: str):
     calls = []
-    # Find every <tool_call {...} > JSON block.
-    pat = re.compile(re.escape(TC_O) + r"\s*(\{.*?\})\s*" + re.escape(TC_C),
-                     re.DOTALL)
-    for i, m in enumerate(pat.finditer(text)):
+    consumed = []
+
+    # 1) Hermes JSON blocks.
+    for m in TC_JSON.finditer(text):
         try:
             obj = json.loads(m.group(1))
         except (json.JSONDecodeError, ValueError):
@@ -75,9 +80,34 @@ def _parse_tool_calls(text: str):
         args = obj.get("arguments", {})
         if isinstance(args, dict):
             args = json.dumps(args)
-        calls.append({"id": f"call_{i}", "type": "function",
+        calls.append({"id": f"call_{len(calls)}", "type": "function",
                       "function": {"name": name, "arguments": args}})
-    return calls, pat.sub("", text).strip()
+        consumed.append((m.start(), m.end()))
+
+    # 2) Legacy XML <function=NAME><parameter=K>V blocks.
+    for m in TC_XML.finditer(text):
+        if any(s <= m.start() < e for s, e in consumed):
+            continue  # nested inside a JSON block already consumed
+        args = {}
+        for pm in TC_PAR.finditer(m.group(2)):
+            k, v = pm.group(1).strip(), pm.group(2).strip()
+            try:
+                args[k] = json.loads(v)
+            except (json.JSONDecodeError, ValueError):
+                args[k] = v
+        calls.append({"id": f"call_{len(calls)}", "type": "function",
+                      "function": {"name": m.group(1).strip(),
+                                  "arguments": json.dumps(args)}})
+        consumed.append((m.start(), m.end()))
+
+    # Clean the consumed spans out of the text.
+    clean = []
+    last = 0
+    for s, e in sorted(consumed):
+        clean.append(text[last:s])
+        last = e
+    clean.append(text[last:])
+    return calls, "".join(clean).strip()
 
 
 def _render(req: ChatReq):
