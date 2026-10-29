@@ -22,11 +22,12 @@ def _rows(path):
 
 
 def main():
-    gate_path = NODE_DIR / NODE / "gate_m1b_bf16.json"
-    delta_name = "delta_m1b_bf16"
-    if not gate_path.exists():
-        gate_path = NODE_DIR / NODE / "gate_m1b.json"
-        delta_name = "delta_m1b"
+    for gate_name, delta_name in (("gate_nyx_gsm.json", "delta_gsm_bf16"),
+                                  ("gate_m1b_bf16.json", "delta_m1b_bf16"),
+                                  ("gate_m1b.json", "delta_m1b")):
+        gate_path = NODE_DIR / NODE / gate_name
+        if gate_path.exists() and json.loads(gate_path.read_text())["accepted"]:
+            break
     gate = json.loads(gate_path.read_text())
     if not gate["accepted"]:
         print(f"[m2] ABORT: gate not accepted ({gate})")
