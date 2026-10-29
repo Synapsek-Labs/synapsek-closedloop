@@ -122,22 +122,47 @@ def chat(req: ChatReq):
         th.start()
 
         def sse():
-            n_out = 0
+            # Buffer, then emit: tool_calls if the model called a tool,
+            # else the full content. Correctness over token-latency since
+            # prompt prefill dominates wall time for agent-sized prompts.
+            parts = []
             for text in streamer:
-                n_out += 1
+                parts.append(text)
+            full = "".join(parts)
+            n_out = len(parts)
+            calls, clean = _parse_tool_calls(full)
+            if calls:
+                for c in calls:
+                    chunk = {"id": "spark", "object": "chat.completion.chunk",
+                             "created": int(time.time()),
+                             "model": "spark-x2.6-1.7b",
+                             "choices": [{"index": 0,
+                                          "delta": {"tool_calls": [c]},
+                                          "finish_reason": None}]}
+                    yield f"data: {json.dumps(chunk)}\n\n"
                 chunk = {"id": "spark", "object": "chat.completion.chunk",
-                         "created": int(time.time()), "model": "spark-x2.6-1.7b",
-                         "choices": [{"index": 0, "delta": {"content": text},
+                         "created": int(time.time()),
+                         "model": "spark-x2.6-1.7b",
+                         "choices": [{"index": 0, "delta": {},
+                                      "finish_reason": "tool_calls"}]}
+                yield f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n"
+            else:
+                chunk = {"id": "spark", "object": "chat.completion.chunk",
+                         "created": int(time.time()),
+                         "model": "spark-x2.6-1.7b",
+                         "choices": [{"index": 0,
+                                      "delta": {"content": clean or full},
                                       "finish_reason": None}]}
                 yield f"data: {json.dumps(chunk)}\n\n"
-            chunk = {"id": "spark", "object": "chat.completion.chunk",
-                     "created": int(time.time()), "model": "spark-x2.6-1.7b",
-                     "choices": [{"index": 0, "delta": {},
-                                  "finish_reason": "stop"}]}
-            yield f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n"
+                chunk = {"id": "spark", "object": "chat.completion.chunk",
+                         "created": int(time.time()),
+                         "model": "spark-x2.6-1.7b",
+                         "choices": [{"index": 0, "delta": {},
+                                      "finish_reason": "stop"}]}
+                yield f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n"
             dt = time.time() - t0
-            print(f"[spark-server] stream {n_out} tok in {dt:.1f}s "
-                  f"({n_out/dt:.1f} tok/s)", flush=True)
+            print(f"[spark-server] stream {n_out} tok in {dt:.1f}s, "
+                  f"tool_calls={len(calls)}", flush=True)
         return StreamingResponse(sse(), media_type="text/event-stream")
 
     out = _model.generate(**ids, **_gen_kwargs(req))
