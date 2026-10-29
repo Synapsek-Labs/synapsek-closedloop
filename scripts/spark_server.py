@@ -96,9 +96,17 @@ def _parse_tool_calls(text: str):
 
 
 def _render(req: ChatReq):
-    msgs = req.messages
-    if msgs and msgs[0].get("role") == "system":
-        pass  # template handles system natively
+    msgs = []
+    for m in req.messages:
+        m = dict(m)
+        for tc in m.get("tool_calls") or []:
+            args = tc.get("function", {}).get("arguments")
+            if isinstance(args, str):
+                try:
+                    tc["function"]["arguments"] = json.loads(args)
+                except (json.JSONDecodeError, ValueError):
+                    tc["function"]["arguments"] = {"raw": args}
+        msgs.append(m)
     prompt = _tok.apply_chat_template(
         msgs, tokenize=False, add_generation_prompt=True,
         tools=req.tools)
