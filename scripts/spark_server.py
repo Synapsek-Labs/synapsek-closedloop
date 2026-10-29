@@ -26,6 +26,11 @@ def _load():
         str(MODEL_DIR), dtype=torch.bfloat16, device_map="cuda:0",
         trust_remote_code=True)
     _model.eval()
+    gc = _model.generation_config
+    for attr in ("top_k", "temperature", "top_p"):
+        v = getattr(gc, attr, None)
+        if isinstance(v, (int, float)) and v <= 0:
+            setattr(gc, attr, None if attr == "top_k" else max(float(v), 1e-5))
     print("[spark-server] model loaded", flush=True)
 
 
