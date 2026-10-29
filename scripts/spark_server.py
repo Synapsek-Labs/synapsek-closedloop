@@ -57,6 +57,7 @@ def _gen_kwargs(req: ChatReq):
     return dict(max_new_tokens=req.max_tokens,
                 do_sample=req.temperature > 0,
                 temperature=max(req.temperature, 1e-5), top_p=0.95,
+                top_k=None,  # iFlytek ships top_k=-1 ("disabled"); None = skip warper
                 pad_token_id=_tok.pad_token_id or _tok.eos_token_id)
 
 
