@@ -135,7 +135,7 @@ def collect_math_pot(node_id, target=400, max_problems=1200, seed=7, batch=16):
                 f.write(json.dumps(r) + "\n")
         print(f"[math] {min(i+batch,len(pool))}/{len(pool)} problems, "
               f"{len(rows)} verified", flush=True)
-    if len(rows) >= target:
+    if len(rows) >= min(target, 200):
         rng = random.Random(11)
         rng.shuffle(rows)
         held, train = rows[:100], rows[100:]
@@ -143,7 +143,8 @@ def collect_math_pot(node_id, target=400, max_problems=1200, seed=7, batch=16):
             "\n".join(json.dumps(r) for r in held))
         (ndir / "train_math.jsonl").write_text(
             "\n".join(json.dumps(r) for r in train))
-        print(f"[math] DONE {len(train)} train + {len(held)} held out",
+        print(f"[math] DONE {len(train)} train + {len(held)} held out"
+              f"{' (pool exhausted before target)' if len(rows) < target else ''}",
               flush=True)
     return len(rows)
 
