@@ -59,6 +59,37 @@ def _load_math_easy(n=1200, seed=7):
     return rows[:n]
 
 
+def _run_batch_subprocess(codes):
+    """Run a batch of programs via src.loop.pot_runner subprocess (killable on hang)."""
+    import subprocess, tempfile, os, sys
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump([{"idx": i, "code": c} for i, c in enumerate(codes)], f)
+        cf = f.name
+    rf = cf + ".res"
+    try:
+        subprocess.run([sys.executable, "-m", "src.loop.pot_runner", cf, rf],
+                       timeout=900, capture_output=True)
+        res = {}
+        for line in open(rf, encoding="utf-8"):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+                res[r["idx"]] = r
+            except Exception:
+                continue
+        return [res.get(i, {"ok": False, "number": None}) for i in range(len(codes))]
+    except subprocess.TimeoutExpired:
+        return [{"ok": False, "number": None}] * len(codes)
+    finally:
+        for p in (cf, rf):
+            try:
+                os.unlink(p)
+            except OSError:
+                pass
+
+
 def collect_math_pot(node_id, target=400, max_problems=1200, seed=7, batch=16):
     import time
     ndir = sys.modules["src.node.nightly"].NODE_DIR / node_id
@@ -83,13 +114,14 @@ def collect_math_pot(node_id, target=400, max_problems=1200, seed=7, batch=16):
         o = tmodel.generate(**ids, max_new_tokens=1024, do_sample=False,
                             pad_token_id=ttok.pad_token_id or ttok.eos_token_id)
         new = 0
+        results = _run_batch_subprocess([_extract_code(ttok.decode(o[j][ids["input_ids"].shape[1]:],
+                                                            skip_special_tokens=True)
+                                                   or "") for j in range(len(chunk))])
         for j, p in enumerate(chunk):
-            text = ttok.decode(o[j][ids["input_ids"].shape[1]:],
-                               skip_special_tokens=True)
-            code = _extract_code(text)
-            if not code:
-                continue
-            ok, number = _safe_run_one(code)
+            code = _extract_code(ttok.decode(o[j][ids["input_ids"].shape[1]:],
+                                             skip_special_tokens=True))
+            r = results[j]
+            ok, number = r["ok"], r["number"]
             gold = extract_last_number(p["answer"])
             if ok and number is not None and gold is not None and \
                     abs(number - gold) < 1e-4:
