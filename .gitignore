@@ -23,4 +23,5 @@ data/
 backups/
 
 # Private ops docs — local only (see ~/synapsek-backups/)
+docs/HANDOFF.md
 docs/HANDOFF_private.md
