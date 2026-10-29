@@ -101,16 +101,34 @@ def _gen_replay(model, tok, n=150, batch=16, max_new=400, seed=7):
     return out_pairs
 
 
+def _load_student(dtype=None):
+    """Student loader. dtype=None keeps legacy 4-bit NF4 path (all previous
+    gates); dtype=torch.bfloat16 loads unquantized for merge-consistent
+    training/serving (the 2026-10-29 m2 lesson: training against the 4-bit
+    base produced an adapter that regresses GSM8K when merged into bf16)."""
+    if dtype is None:
+        return load_model()
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from experiments.run_longhorizon_demo import MODEL
+    tok = AutoTokenizer.from_pretrained(MODEL)
+    m = AutoModelForCausalLM.from_pretrained(MODEL, dtype=dtype,
+                                             device_map="cuda:0")
+    m.eval()
+    return tok, m
+
+
 def train_student_pot(node_id, rows, n_epochs=1, lr=5e-5, seed=7,
-                      out_name="delta_pot", replay_ratio=1.0, replay_n=None):
+                      out_name="delta_pot", replay_ratio=1.0, replay_n=None,
+                      dtype=None):
     """Validated v2 recipe (learning_node_v2_plan.md): teacher pairs MIXED
     with context-free base-model replay (arXiv:2505.13811) — the change
-    that turned 7 rejections into the first ACCEPT (47->50)."""
+    that turned 7 rejections into the first ACCEPT (47->50).
+    Pass dtype=torch.bfloat16 to train against the unquantized base."""
     random.seed(seed)
     if len(rows) < 40:
         print(f"[pot] only {len(rows)} verified programs — below minimum")
         return None
-    tok, model = load_model()
+    tok, model = _load_student(dtype)
     if replay_ratio > 0:
         replay = _gen_replay(model, tok,
                              n=int(len(rows) * replay_ratio)

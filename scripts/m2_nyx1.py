@@ -22,11 +22,16 @@ def _rows(path):
 
 
 def main():
-    gate = json.loads((NODE_DIR / NODE / "gate_m1b.json").read_text())
+    gate_path = NODE_DIR / NODE / "gate_m1b_bf16.json"
+    delta_name = "delta_m1b_bf16"
+    if not gate_path.exists():
+        gate_path = NODE_DIR / NODE / "gate_m1b.json"
+        delta_name = "delta_m1b"
+    gate = json.loads(gate_path.read_text())
     if not gate["accepted"]:
-        print(f"[m2] ABORT: gate_m1b not accepted ({gate})")
+        print(f"[m2] ABORT: gate not accepted ({gate})")
         sys.exit(1)
-    print(f"[m2] building Nyx-1 v0 from accepted delta_m1b (gate: {gate['deltas']})")
+    print(f"[m2] building Nyx-1 v0 from accepted {delta_name} (gate: {gate['deltas']})")
 
     # Merge in FULL PRECISION (fp32), then cast to bf16 on save. The previous
     # attempt merged into the 4-bit-quantized base and re-saved 4-bit —
@@ -36,7 +41,7 @@ def main():
     tok = AutoTokenizer.from_pretrained(MODEL)
     base_fp32 = AutoModelForCausalLM.from_pretrained(
         MODEL, dtype=torch.float32, device_map="cuda:0")
-    merged = PeftModel.from_pretrained(base_fp32, str(NODE_DIR / NODE / "delta_m1b"))
+    merged = PeftModel.from_pretrained(base_fp32, str(NODE_DIR / NODE / delta_name))
     merged = merged.merge_and_unload()
     merged = merged.to(torch.bfloat16)
     merged.eval()
