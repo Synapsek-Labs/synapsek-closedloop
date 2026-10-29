@@ -91,7 +91,7 @@ def _parse_tool_calls(text: str):
         calls.append({"id": f"call_{len(calls)}",
                       "type": "function",
                       "function": {"name": m.group("name").strip(),
-                                   "arguments": args}})
+                                   "arguments": json.dumps(args)}})
     return calls, TC_RE.sub("", text).strip()
 
 
@@ -132,12 +132,16 @@ def chat(req: ChatReq):
             n_out = len(parts)
             calls, clean = _parse_tool_calls(full)
             if calls:
-                for c in calls:
+                for i, c in enumerate(calls):
+                    delta_tc = {"index": i, "id": c["id"], "type": "function",
+                                "function": {"name": c["function"]["name"],
+                                             "arguments": c["function"]["arguments"]}}
                     chunk = {"id": "spark", "object": "chat.completion.chunk",
                              "created": int(time.time()),
                              "model": "spark-x2.6-1.7b",
                              "choices": [{"index": 0,
-                                          "delta": {"tool_calls": [c]},
+                                          "delta": {"role": "assistant",
+                                                    "tool_calls": [delta_tc]},
                                           "finish_reason": None}]}
                     yield f"data: {json.dumps(chunk)}\n\n"
                 chunk = {"id": "spark", "object": "chat.completion.chunk",
