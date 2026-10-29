@@ -60,10 +60,12 @@ def models():
 # <function=NAME><parameter=K>V</parameter> blocks. Parse both.
 TC_O = "<" + "tool_call>"
 TC_C = "</" + "tool_call>"
+TC_FN_C = "</" + "function>"
+TC_PAR_C = "</" + "parameter>"
 TC_JSON = re.compile(re.escape(TC_O) + r"\s*(\{.*?\})\s*" + re.escape(TC_C),
                      re.DOTALL)
-TC_XML = re.compile(r"<function=([^>\s]+)>(.*?)", re.DOTALL)
-TC_PAR = re.compile(r"<parameter=([^>\s]+)>(.*?)", re.DOTALL)
+TC_XML = re.compile(r"<function=([^>\s]+)>(.*?)" + TC_FN_C, re.DOTALL)
+TC_PAR = re.compile(r"<parameter=([^>\s]+)>(.*?)" + TC_PAR_C, re.DOTALL)
 
 
 def _parse_tool_calls(text: str):
