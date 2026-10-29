@@ -48,11 +48,47 @@ def models():
 
 @app.post("/v1/chat/completions")
 def chat(req: ChatReq):
+    import types
+    from threading import Thread
+    from transformers import TextIteratorStreamer
     prompt = _tok.apply_chat_template(
         [m.model_dump() for m in req.messages], tokenize=False,
         add_generation_prompt=True)
     ids = _tok(prompt, return_tensors="pt").to(_model.device)
     t0 = time.time()
+
+    if req.stream:
+        streamer = TextIteratorStreamer(_tok, skip_prompt=True,
+                                        skip_special_tokens=True)
+
+        def run():
+            _model.generate(**ids, max_new_tokens=req.max_tokens,
+                            do_sample=req.temperature > 0,
+                            temperature=max(req.temperature, 1e-5),
+                            top_p=0.95, streamer=streamer,
+                            pad_token_id=_tok.pad_token_id or _tok.eos_token_id)
+        th = Thread(target=run)
+        th.start()
+
+        def sse():
+            n_out = 0
+            for text in streamer:
+                n_out += 1
+                chunk = {"id": "nyx1", "object": "chat.completion.chunk",
+                         "created": int(time.time()), "model": "nyx-1-v0",
+                         "choices": [{"index": 0, "delta": {"content": text},
+                                      "finish_reason": None}]}
+                yield f"data: {json.dumps(chunk)}\n\n"
+            chunk = {"id": "nyx1", "object": "chat.completion.chunk",
+                     "created": int(time.time()), "model": "nyx-1-v0",
+                     "choices": [{"index": 0, "delta": {},
+                                  "finish_reason": "stop"}]}
+            yield f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n"
+            dt = time.time() - t0
+            print(f"[nyx1-server] stream {n_out} tok in {dt:.1f}s "
+                  f"({n_out/dt:.1f} tok/s)", flush=True)
+        return StreamingResponse(sse(), media_type="text/event-stream")
+
     out = _model.generate(
         **ids, max_new_tokens=req.max_tokens,
         do_sample=req.temperature > 0, temperature=max(req.temperature, 1e-5),
