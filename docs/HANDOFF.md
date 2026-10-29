@@ -196,15 +196,10 @@ DOI / endorsement path) and deferred it to launch time. arXiv needs an endorser 
 
 ---
 
-## 9. Environment facts (verified)
+## 9. Environment facts (ops details kept private — full version in ~/synapsek-backups/HANDOFF_full_ops.md)
 
-- **shinobi** = `ssh shinobi`, 192.168.0.28, RTX 5090 32 GB, venv Python 3.13.16, torch 2.11+cu128.
-  Remote shell is **cmd.exe**: no `tail`/`head` (use `findstr`), no `timeout`, and
-  `dir /s /b` recursions can exceed a 60 s SSH timeout — target specific paths.
-- Kill a stuck run: `C:\Users\User\kill_synth.ps1`.
-- `uv` venv has no pip — `uv pip install --python .venv\Scripts\python.exe`.
-- RunPod MCP server is configured (`mcp.runpod.io`, OAuth) for GPU bursts.
-- Delegation model: `deepseek/deepseek-v4-pro` (set in the profile's `delegation` block).
+- Compute node: LAN GPU box ("shinobi"), RTX 5090 32 GB, venv Python 3.13, torch 2.11+cu128. Remote shell is cmd.exe: no tail/head, no timeout, PowerShell `$_` stripped over ssh — write .ps1 scripts to files.
+- RunPod MCP server configured for GPU bursts. Delegation model configured in the profile.
 
 ---
 

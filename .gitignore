@@ -21,3 +21,6 @@ data/
 
 # Local session backups (transcripts, state.db) — never publish
 backups/
+
+# Private ops docs — local only (see ~/synapsek-backups/)
+docs/HANDOFF_private.md
