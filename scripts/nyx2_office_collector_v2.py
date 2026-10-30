@@ -86,8 +86,11 @@ def t_schedule(rng):
     setup = [py(header, "schedule.txt")]
     prompt = (f"The reception schedule for tomorrow is in schedule.txt "
               f"(header: time,client). Book an appointment for {name} "
-              f"at {times[0]} by adding a new row with the time and client "
-              f"name. Do not change anything else.")
+              f"at {times[0]} by adding EXACTLY one new line at the end of the "
+              f"file, in the format: {times[0]},{name} — the 24-hour time as "
+              f"written, then a comma, then the name, no extra spaces, no "
+              f"quotes. Do not modify the header or any existing row. Write "
+              f"the file with a python one-liner.")
     exp = header + f"{times[0]},{name}"
     return setup, prompt, lambda e=exp: read("schedule.txt") == e
 
@@ -100,8 +103,11 @@ def t_visitor(rng):
     header = "time,visitor,visiting\n"
     setup = [py(header, "visitors.csv")]
     prompt = (f"A visitor named {name} has arrived to see {visiting}. Record "
-              f"this in visitors.csv (header: time,visitor,visiting) with "
-              f"today's arrival time noted as {tm}.")
+              f"this in visitors.csv (header: time,visitor,visiting) by "
+              f"adding EXACTLY one new line at the end of the file, in the "
+              f"format: {tm},{name},{visiting} — comma-separated, no extra "
+              f"spaces, no quotes, 24-hour time as written. Do not modify "
+              f"the header. Write the file with a python one-liner.")
     exp = header + f"{tm},{name},{visiting}"
     return setup, prompt, lambda e=exp: read("visitors.csv") == e
 
@@ -139,9 +145,11 @@ def t_merge(rng):
     a = [f"a{i},{rng.randint(1,20)}" for i in range(1, 4)]
     b = [f"b{i},{rng.randint(1,20)}" for i in range(1, 4)]
     setup = [py(h + "\n".join(a), "a.csv"), py(h + "\n".join(b), "b.csv")]
-    prompt = ("Combine a.csv and b.csv into combined.csv: keep the single "
-              "header row, then all rows of a.csv followed by all rows of "
-              "b.csv.")
+    prompt = ("Combine a.csv and b.csv into combined.csv. The combined file "
+              "must contain the header row exactly once, then the data rows "
+              "of a.csv in order, then the data rows of b.csv in order — "
+              "no blank lines, values exactly as in the originals. Use a "
+              "python one-liner.")
     exp = h + "\n".join(a + b)
     return setup, prompt, lambda e=exp: read("combined.csv") == e
 
@@ -168,8 +176,9 @@ def t_letter(rng):
     person = f"{rng.choice(FIRST)} {rng.choice(LAST)}".title()
     body = f"Your appointment has been confirmed for {rng.choice(HOURS)}."
     prompt = (f"Create letter.txt containing EXACTLY this text, with NAME "
-              f"replaced by {person}:\nDear NAME,\n{body}\nSincerely,\n"
-              f"The Office")
+              f"replaced by {person}. The file must have exactly 4 lines and "
+              f"nothing else (no title, no extra newline):\nDear NAME,\n"
+              f"{body}\nSincerely,\nThe Office")
     exp = f"Dear {person},\n{body}\nSincerely,\nThe Office"
     return None, prompt, lambda e=exp: read("letter.txt") == e
 
