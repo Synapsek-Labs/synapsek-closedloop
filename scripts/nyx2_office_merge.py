@@ -15,7 +15,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 MODEL_DIR = r"C:\Users\User\hf_models\spark-x2.6-1.7b"
 DELTA = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\delta_office")
-OUT = Path(r"C:\Users\User\hf_models\nyx-2-office-v0")
+OUT = Path(r"C:\Users\User\hf_models\nyx-2-office-v1")  # broadened: v1 delta on 800 trajectories
 
 tok = AutoTokenizer.from_pretrained(MODEL_DIR, trust_remote_code=True)
 base_fp32 = AutoModelForCausalLM.from_pretrained(
