@@ -77,9 +77,10 @@ def main():
             if l.strip()]
     print(f"[office-train] {len(rows)} trajectories", flush=True)
 
-    tok = AutoTokenizer.from_pretrained(MODEL_DIR)
+    tok = AutoTokenizer.from_pretrained(MODEL_DIR, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_DIR, dtype=torch.bfloat16, device_map="cuda:0")
+        MODEL_DIR, dtype=torch.bfloat16, device_map="cuda:0",
+        trust_remote_code=True)
     model.eval()
 
     cfg = LoraConfig(r=32, lora_alpha=64, lora_dropout=0.05,
