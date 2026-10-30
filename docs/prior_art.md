@@ -105,6 +105,47 @@ cost. Also open: first-mistake LOCALIZATION (cumulative 0.92 is ours, but pinpoi
 4. Monitor weekly: this landscape changed within the last ~4 months; re-check before
    every external claim.
 
+## 7. Tool-call trajectory SFT + difficulty band + self-improvement framing (checked 2026-10-30, sweep for pub1)
+
+- **Execution-verified trajectory SFT: OCCUPIED concept.** Lineage: AgentTuning
+  (arXiv:2310.12823), FireAct (arXiv:2310.05915), Toolformer (arXiv:2302.04761),
+  Agent Distillation (arXiv:2505.17612), MENTOR (arXiv:2510.18383),
+  Compiling Agentic Workflows into LLM weights (arXiv:2605.22502), and
+  **MACRO (arXiv:2603.05860)** which uses the literal phrase "verified execution
+  trajectories" — must cite. Residual delta: our recipe at 1.5B/1.7B scale
+  (execution-verified PoT + 1:1 context-free replay anchor + admission-gated
+  adapter bank) plus the published negative trail. NOT a "first".
+- **40-70% failure band: PRINCIPLE OCCUPIED, number is ours.** SPaCe (2508.05015),
+  dual-difficulty DPO curriculum (2504.07856), SPARD (2604.07837), and
+  **VibeThinker-3B / MGPO (arXiv:2606.16140)** which explicitly prefers ~50/50
+  problems. Frame as an empirical threshold finding for verified SFT
+  (79%->69% measured rejection above band), citing the curriculum line. Do not
+  call it a discovered "law".
+- **Admission-gated closed loop + model bank: components occupied.** STABLE
+  (2510.16089) single-model gating; SyncLoop/C2-Evo (2507.16518) closed-loop
+  self-improving framework; adapter/LoRA banks (2610.22539, 2609.17042, 2606.02042);
+  commercial collisions: **Eigenform (eigenform.ai)** local recursive self-improvement,
+  DigitalOcean Agent Learning Services (Oct 2026). Only defensible claim: the
+  end-to-end integration (verified trajectories -> replay-anchored train ->
+  admission-gated bank -> ed25519-signed receiver-re-verified federation) at small
+  local scale with published negatives.
+- **"First self-improving local model in Australia": UNFALSIFIABLE — keep out of the
+  paper.** AU sovereign-AI activity exists (SCX/SambaNova Oct 2025; Nemotron 3.5
+  Lightning AU press). Marketing-only, timestamped via Zenodo + commit history.
+- **Terminology:** "Nyx" is a crowded name (SnowNation101/Nyx SIGIR'26, HF nyx
+  models, npm nyx-harness) — disambiguate as "Nyx (Synapsek Labs)". "Closed-loop
+  self-improvement" is generic (SyncLoop, MACRO, Eigenform) — usable, not claimable.
+- **arXiv endorsement (pub1 gate):** as of the 2026-01-21 policy
+  (blog.arxiv.org/2026/01/21/attention-authors-updated-endorsement-policy/) an
+  institutional email alone no longer qualifies; path for an affiliation-less lab is
+  a personal endorser (established cs author; cs is one endorsement domain covering
+  cs.LG/cs.AI/cs.CL). Plan: Zenodo DOI first (paper CC BY 4.0 + code Apache-2.0 as
+  two linked records) -> endorser hunt in parallel -> arXiv cs.LG primary ->
+  fallback OSF Preprints + TMLR/COLM/workshop. Paper license CC BY (arXiv does not
+  offer Apache-2.0 for papers; no conflict, different artifacts).
+- **pub1 framing rule:** research article, NOT position/survey paper (cs category
+  rejects unreviewed survey/position papers since 2025-10-31).
+
 ## 6. Federated LoRA aggregation (checked 2026-10-28, Learning Node gate)
 - FedLoRAGuard (EMNLP 2026): adapter integrity/backdoor verification, not improvement gating.
 - FC-MoE (arXiv:2606.15625): conflict-aware MoE federated fine-tuning, gradient consensus.
