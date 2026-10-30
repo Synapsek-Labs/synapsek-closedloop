@@ -52,6 +52,7 @@ def norm(messages):
 def build_pairs(tok, rows):
     """(prompt, target) per assistant turn, replay-anchored."""
     pairs = []
+    skipped = 0
     for r in rows:
         msgs = norm(r["messages"])
         tools = r["tools"]
@@ -63,10 +64,17 @@ def build_pairs(tok, rows):
                 add_generation_prompt=True)
             full = tok.apply_chat_template(
                 msgs[:i + 1], tokenize=False, tools=tools)
-            assert full.startswith(prompt), "template prefix mismatch"
+            # transformers 4.x generation prompt appends "\n" after <|Bot|>
+            # which the full render does not — rstrip aligns them.
+            if not full.startswith(prompt):
+                prompt = prompt.rstrip("\r\n")
+            if not full.startswith(prompt):
+                skipped += 1
+                continue
             target = full[len(prompt):]
             if target.strip():
                 pairs.append((prompt, target))
+    print(f"[office-train] {len(pairs)} pairs, {skipped} skipped (prefix mismatch)")
     return pairs
 
 
