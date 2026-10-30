@@ -1,0 +1,16 @@
+{
+  "pre_registered_bars": [
+    "merged >= base+0.10 (0.418)",
+    "merged >= 0.50 absolute"
+  ],
+  "base_22": 0.3181818181818182,
+  "merged_22": 0.6818181818181818,
+  "delta": 0.364,
+  "base_v1_arch": 0.4,
+  "merged_v1_arch": 0.5,
+  "base_v2_arch": 0.25,
+  "merged_v2_arch": 0.8333333333333334,
+  "train_data": "800 execution-verified trajectories (400 v1 file/csv + 400 v2 real-life)",
+  "verdict": "ACCEPT",
+  "date": "2026-10-31"
+}
