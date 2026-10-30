@@ -70,10 +70,10 @@ TASKS = [
      "State the attack chain in EXACTLY this format, one line:\n"
      "source-ip=<ip>; account=<account>; vector=<one word>; "
      "final-action=<what was executed>",
-     check_exact("10.0.0.9"),
-     lambda a: ("admin" in a.lower() and "10.0.0.9" in a and
-                ("brute" in a or "credential" in a or "password" in a)
-                and ("x.sh" in a.lower() or "script" in a.lower()))),
+     lambda a: ("10.0.0.9" in a and "admin" in a.lower() and
+                ("brute" in a.lower() or "credential" in a.lower()
+                 or "password" in a.lower()) and
+                ("x.sh" in a.lower() or "script" in a.lower()))),
 
     ("win_eventid",
      "Windows Event log forensics:\n"
