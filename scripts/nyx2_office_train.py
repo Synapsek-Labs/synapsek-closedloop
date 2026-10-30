@@ -24,7 +24,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
-DATA = NODE / "work_office.jsonl"
+DATA = [NODE / "work_office.jsonl", NODE / "work_office_v2.jsonl"]
 MODEL_DIR = r"C:\Users\User\hf_models\spark-x2.6-1.7b"
 OUT = NODE / "delta_office"
 LR = 5e-5
@@ -83,8 +83,11 @@ def build_pairs(tok, rows):
 def main():
     random.seed(SEED)
     torch.manual_seed(SEED)
-    rows = [json.loads(l) for l in DATA.read_text(encoding="utf-8").splitlines()
-            if l.strip()]
+    rows = []
+    for f in DATA:
+        if f.exists():
+            rows += [json.loads(l) for l in
+                     f.read_text(encoding="utf-8").splitlines() if l.strip()]
     print(f"[office-train] {len(rows)} trajectories", flush=True)
 
     tok = AutoTokenizer.from_pretrained(MODEL_DIR, trust_remote_code=True)
