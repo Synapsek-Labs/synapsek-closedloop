@@ -14,6 +14,7 @@
 # Run on shinobi (main .venv):
 #   .venv\Scripts\python.exe scripts\nyx2_office_train.py
 import json, sys, io, random, time
+from os.path import commonprefix
 from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -64,13 +65,14 @@ def build_pairs(tok, rows):
                 add_generation_prompt=True)
             full = tok.apply_chat_template(
                 msgs[:i + 1], tokenize=False, tools=tools)
-            # transformers 4.x generation prompt appends "\n" after <|Bot|>
-            # which the full render does not — rstrip aligns them.
-            if not full.startswith(prompt):
-                prompt = prompt.rstrip("\r\n")
-            if not full.startswith(prompt):
+            # transformers 4.x generation prompt and the full render can
+            # differ by a few chars around <|Bot|> — align on the true
+            # common character prefix (clean special-token boundary).
+            p = commonprefix([prompt, full])
+            if len(p) < len(prompt) - 16:
                 skipped += 1
                 continue
+            prompt = p
             target = full[len(prompt):]
             if target.strip():
                 pairs.append((prompt, target))
