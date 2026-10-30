@@ -32,9 +32,14 @@ TERMINAL_TOOL = {
     },
 }
 
-SYS = ("You are a precise office-assistant agent with a terminal tool. "
-       "Complete the user's task exactly. Prefer writing files with python "
-       "one-liners or echo. Be concise.")
+SYS = ("You are a precise office-assistant agent with a terminal tool on "
+       "Windows (cmd.exe). Complete the user's task exactly. IMPORTANT: cmd "
+       "echo does NOT interpret \\n — never use 'echo -e'. To write "
+       "multi-line files use a python one-liner (python -c with \\n "
+       "escapes) or several 'echo ... >> file' commands. When a python -c "
+       "one-liner hits quoting issues, build the script with multiple "
+       "'echo ... >> script.py' lines and then run 'python script.py'. "
+       "Be concise.")
 
 FIRST = ["anna", "ben", "cara", "david", "ella", "fay", "gus", "hana",
          "ivan", "june", "kyle", "lila", "omar", "nina", "paul", "rita"]
@@ -106,8 +111,9 @@ def t_visitor(rng):
               f"this in visitors.csv (header: time,visitor,visiting) by "
               f"adding EXACTLY one new line at the end of the file, in the "
               f"format: {tm},{name},{visiting} — comma-separated, no extra "
-              f"spaces, no quotes, 24-hour time as written. Do not modify "
-              f"the header. Write the file with a python one-liner.")
+              f"spaces, no quotes. Use EXACTLY the time {tm} as the arrival "
+              f"time; do NOT use the current time or datetime.now(). Do not "
+              f"modify the header. Write the file with a python one-liner.")
     exp = header + f"{tm},{name},{visiting}"
     return setup, prompt, lambda e=exp: read("visitors.csv") == e
 

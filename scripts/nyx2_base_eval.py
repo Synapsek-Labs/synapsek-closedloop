@@ -24,9 +24,14 @@ TERMINAL_TOOL = {
     },
 }
 
-SYS = ("You are a precise office-assistant agent with a terminal tool. "
-       "Complete the user's task exactly. Prefer writing files with python "
-       "one-liners or echo. Be concise.")
+SYS = ("You are a precise office-assistant agent with a terminal tool on "
+       "Windows (cmd.exe). Complete the user's task exactly. IMPORTANT: cmd "
+       "echo does NOT interpret \\n — never use 'echo -e'. To write "
+       "multi-line files use a python one-liner (python -c with \\n "
+       "escapes) or several 'echo ... >> file' commands. When a python -c "
+       "one-liner hits quoting issues, build the script with multiple "
+       "'echo ... >> script.py' lines and then run 'python script.py'. "
+       "Be concise.")
 
 
 def run_cmd(cmd):
