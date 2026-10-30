@@ -320,6 +320,14 @@ def main():
         dt = time.time() - t0
         log(f"task {i} (kind {i % 12}): {'BANK' if ok else 'reject'} "
             f"({n_calls} calls, {dt:.0f}s) banked={banked + 1 if ok else banked}")
+        if not ok:
+            # reject log: full trajectory for offline diagnosis of
+            # systematically-failing archetypes (appended, never trained on)
+            with open(WORK.with_suffix(".rejects.jsonl"), "a",
+                      encoding="utf-8") as f:
+                f.write(json.dumps({"id": i, "kind": i % 12,
+                                    "tool_calls": n_calls,
+                                    "messages": messages}) + "\n")
         if ok:
             banked += 1
             with open(WORK, "a", encoding="utf-8") as f:
