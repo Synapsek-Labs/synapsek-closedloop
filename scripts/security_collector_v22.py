@@ -14,12 +14,15 @@
 # ground truth before banking -> work_sec22.jsonl. Target 800 rows.
 # Run with teacher up on :8002:
 #   .venv\Scripts\python.exe scripts\security_collector_v22.py
-import json, random, time
+import json, os, random, time
 from pathlib import Path
 import requests
 
 BASE_URL = "http://127.0.0.1:8002/v1/chat/completions"
-OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
+OUT = Path(os.environ.get(
+    "NYX_OUT",
+    r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1",
+))
 WORK = OUT / "work_sec22.jsonl"
 LOG = OUT / "sec22_collect_log.txt"
 TARGET = 800
