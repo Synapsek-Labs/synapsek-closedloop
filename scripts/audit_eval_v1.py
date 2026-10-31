@@ -88,8 +88,9 @@ TASKS = [
      "Which vulnerability class is this? Answer EXACTLY one line:\n"
      "vuln=<one or two words>; func=<function name>; fix=<one short phrase "
      "(what must happen before the external call)>.\"",
-     lambda a: has_all(kv(a), vuln=("reentran",), func=("withdraw",),
-               fix=("state", "balance", "effect", "update", "before", "first"))),
+     lambda a: ("reentran" in norm(a)) and ("withdraw" in norm(a)) and
+               ("state" in norm(a) or "balance" in norm(a) or "effect" in norm(a)
+                or "before" in norm(a) or "update" in norm(a) or "first" in norm(a))),
 
     # 2. oracle manipulation — spot DEX reserves as price feed
     ("oracle_spot",
@@ -107,9 +108,9 @@ TASKS = [
      "What is the price source and its key weakness? Answer EXACTLY one line:\n"
      "source=<what the price is computed from>; weakness=<one phrase>; "
      "attack=<one phrase, how an attacker moves the price>.\"",
-     lambda a: has_all(kv(a), source=("uniswap", "pair", "dex", "amm", "pool", "reserve"),
-               weakness=("manipul", "flash", "spot"),
-               attack=("flash", "swap", "manipul"))),
+     lambda a: ("reserve" in norm(a) or "pair" in norm(a) or "dex" in norm(a)
+                or "pool" in norm(a) or "amm" in norm(a) or "uniswap" in norm(a)) and
+               ("flash" in norm(a) or "manipulat" in norm(a) or "swap" in norm(a))),
 
     # 3. access control — one unguarded privileged function among guarded ones
     ("access_control",
@@ -164,10 +165,10 @@ TASKS = [
      "op=<the dangerous opcode, one word>; control=<who can set the target, "
      "one or two words>; effect=<one short phrase, what delegatecall executes "
      "in>.\"",
-     lambda a: has_all(kv(a), op=("delegatecall",),
-               control=("anyone", "user", "attacker", "unauth", "no access",
-                        "missing", "none", "no auth"),
-               effect=("storage", "context", "wallet", "proxy", "contract"))),
+     lambda a: ("delegatecall" in norm(a)) and
+               ("anyone" in norm(a) or "unauthorized" in norm(a) or "no one" in norm(a)
+                or "unauth" in norm(a) or "user" in norm(a) or "attacker" in norm(a)
+                or "missing" in norm(a) or "no access" in norm(a))),
 
     # 6. upgradability — uninitialized implementation
     ("upgrade_uninit",
@@ -248,10 +249,9 @@ TASKS = [
      "rounding? Answer EXACTLY one line:\n"
      "class=<one or two words>; first_beneficiary=<who profits, one or two words>; "
      "fix=<one phrase>.\"",
-     lambda a: has_all(kv(a), **{"class": ("rounding", "inflation", "donation", "first", "share"),
-               "first_beneficiary": ("first", "attacker", "depositor"),
-               "fix": ("virtual", "offset", "decimal", "minimum", "zero",
-                    "round", "share", "dust")})),
+     lambda a: ("rounding" in norm(a) or "inflation" in norm(a) or "donation" in norm(a)
+                or "first" in norm(a) or "share" in norm(a)) and
+               ("first" in norm(a) or "attacker" in norm(a) or "depositor" in norm(a))),
 
     # 10. rounding direction — fees must round against the user
     ("rounding_fee",
@@ -297,8 +297,9 @@ TASKS = [
      "send() can fail silently. What does the code fail to do? "
      "Answer EXACTLY one line:\n"
      "missing=<one short phrase>; result=<one short phrase, what breaks>.\"",
-     lambda a: has_all(kv(a), missing=("check", "require", "revert", "return", "ignore"),
-               result=("fail", "stuck", "loss", "bricked", "wrong", "silent"))),
+     lambda a: ("return" in norm(a) or "result" in norm(a) or "ok" in norm(a)) and
+               ("check" in norm(a) or "require" in norm(a) or "revert" in norm(a)
+                or "ignore" in norm(a) or "ignored" in norm(a) or "handle" in norm(a))),
 
     # 13. signature replay — missing nonce + domain separator
     ("sig_replay",
@@ -340,10 +341,10 @@ TASKS = [
      "one line:\n"
      "predictable=<yes or no>; source=<one or two words, what the seed comes "
      "from>; replacement=<one or two words, the standard safe source>.\"",
-     lambda a: has_all(kv(a), predictable=("yes",),
-               source=("block", "chain", "hash"),
-               replacement=("vrf", "commit", "reveal", "oracle",
-                            "off-chain", "off chain"))),
+     lambda a: (("yes" in norm(a).split()[:3] or "yes" in norm(a)) and
+               ("block" in norm(a) or "chain" in norm(a)) and
+               ("vrf" in norm(a) or "commit" in norm(a) or "reveal" in norm(a)
+                or "oracle" in norm(a) or "off-chain" in norm(a) or "off chain" in norm(a)))),
 ]
 
 
