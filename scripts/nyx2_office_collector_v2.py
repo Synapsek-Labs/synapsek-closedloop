@@ -9,10 +9,14 @@
 # Resumable: skips ids already in work_office_v2.jsonl.
 import json, random, shutil, subprocess, time
 from pathlib import Path
+import os
 import requests
 
 BASE_URL = "http://127.0.0.1:8002/v1/chat/completions"
-SANDBOX = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\nyx2_sandbox")
+SANDBOX = Path(os.environ.get(
+    "NYX_SANDBOX",
+    r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\nyx2_sandbox",
+))
 OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 WORK = OUT / "work_office_v2.jsonl"
 LOG = OUT / "office_v2_log.txt"
