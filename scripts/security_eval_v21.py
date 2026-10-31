@@ -5,9 +5,11 @@
 # Run against :8001: .venv\Scripts\python.exe scripts\nyx2_security_eval_v21.py <label>
 import json, re, sys, time
 from pathlib import Path
+import os
 import requests
 
-BASE_URL = "http://127.0.0.1:8001/v1/chat/completions"
+BASE_URL = os.environ.get(
+    "NYX_BASE_URL", "http://127.0.0.1:8001/v1/chat/completions")
 OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 LABEL = sys.argv[1] if len(sys.argv) > 1 else "model"
 

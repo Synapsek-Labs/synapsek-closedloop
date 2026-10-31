@@ -11,6 +11,7 @@
 # Writes security_eval_v2_<label>.json
 import json, re, sys, time
 from pathlib import Path
+import os
 import requests
 
 BASE_URL = "http://127.0.0.1:8001/v1/chat/completions"
