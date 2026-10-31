@@ -5,10 +5,14 @@
 #   spark-venv python scripts/nyx2_base_eval.py
 import json, os, shutil, subprocess, sys, time, re
 from pathlib import Path
+import os
 import requests
 
 BASE_URL = "http://127.0.0.1:8001/v1/chat/completions"
-SANDBOX = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\nyx2_sandbox")
+SANDBOX = Path(os.environ.get(
+    "NYX_SANDBOX",
+    r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1\nyx2_sandbox",
+))
 OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 MAX_TURNS = 8
 
