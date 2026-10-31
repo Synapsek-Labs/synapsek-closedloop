@@ -21,7 +21,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
 DATA = [NODE / "work_office.jsonl", NODE / "work_office_v2.jsonl",
-        NODE / "work_sec21.jsonl"]
+        NODE / "work_sec21.jsonl", NODE / "work_sec22.jsonl"]
 MODEL_DIR = r"C:\Users\User\hf_models\spark-x2.6-1.7b"
 OUT = NODE / "delta_joint"
 LR = 5e-5
