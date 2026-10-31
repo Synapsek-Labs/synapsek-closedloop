@@ -164,21 +164,25 @@ def gen_tasks():
             tasks[i] = (prompt, chk)
         # --- k12 compliance deep-dive ---
         elif k == 12:
-            scenario, ctrl = rng.choice([
+            scenario, ctrl, scope = rng.choice([
                 ("A cashier payment system stores full track data from the "
                  "magnetic stripe, violating cardholder data protection.",
-                 "3.4"),
+                 "3.4", "rendering stored account data unreadable"),
                 ("Shared generic admin logins are used on production "
                  "servers with no individual attribution in logs.",
-                 "8.2"),
+                 "8.2", "unique identification per user"),
                 ("The company has never run a formal internal scan for "
                  "rogue wireless access points in the office.",
-                 "1.3"),
+                 "1.3", "probing for wireless access points"),
                 ("The backup restore procedure has never been tested with "
                  "an actual restore of a random sample.",
-                 "12.10.2"),
+                 "12.10.2", "testing restoration of backups"),
             ])
-            prompt = (f"PCI DSS v4 audit: {scenario} Which PCI DSS "
+            prompt = (f"PCI DSS v4 audit. Reference: requirement 3.4 = "
+                      f"{scope} (stored account data); 8.2 = unique "
+                      f"identification per user; 1.3 = wireless probing "
+                      f"(rogue access points); 12.10.2 = testing backup "
+                      f"restoration. Scenario: {scenario} Which PCI DSS "
                       f"requirement does this fail? Answer with ONLY the "
                       f"requirement number (like '5.3').")
             def chk(a, ctrl=ctrl):
@@ -209,8 +213,9 @@ def gen_tasks():
                       f"- imports: only a few functions typical of raw file "
                       f"writes and process hollowing\n"
                       f"- {detail}\n"
-                      f"Classify the sample and name the FIRST safe "
-                      f"analysis step. Format: class=<one word>; "
+                      f"Classify the sample as exactly ONE of these classes: "
+                      f"ransomware, infostealer, or loader. Then name the FIRST "
+                      f"safe analysis step. Format: class=<one word>; "
                       f"first_step=<one phrase>")
             def chk(a, kind=kind):
                 al = a.lower()
