@@ -1,0 +1,83 @@
+{
+  "model": "nyx2-joint-v0-gate",
+  "security_v2_acc": 0.8666666666666667,
+  "n": 15,
+  "verdict": "TOO EASY (>0.70) -> raise difficulty",
+  "detail": {
+    "incident_chain": {
+      "pass": true,
+      "answer": "We need answer. Need parse incident reconstruction. Need state attack chain exactly format one line. Need determine source-ip, account, vector, final-action.\n\nWe have logs:\nauth.log:\n10.0.0.5 - admin ",
+      "secs": 22.1
+    },
+    "win_eventid": {
+      "pass": true,
+      "answer": "We need answer. Need parse. User asks Windows Event log forensics. Events:\nE1 4625 user=backup_svc src=10.1.1.50 (x14, 23:50-23:58)\nE2 4624 user=backup_svc src=10.1.1.50 (23:58)\nE3 4688 new process po",
+      "secs": 22.7
+    },
+    "config_ssh": {
+      "pass": true,
+      "answer": "We need answer. Need parse question. Hardening review of sshd_config. Need list directives that should be changed for hardening, in order of file, comma-separated, directive names only. Need infer lik",
+      "secs": 22.8
+    },
+    "ioc_extract": {
+      "pass": false,
+      "answer": "We need answer only malicious IPs comma-separated in order first appearance. Need parse log. Need identify malicious scanners/probing IPs vs CDN cache IPs benign. Given:\n199.1.33.9 - GET /admin.php 40",
+      "secs": 22.8
+    },
+    "tamper_detect": {
+      "pass": true,
+      "answer": "We need answer only line identifier. Need parse. We have log integrity check: Each line carries sha256(prev_line-hash + line). Verifying:\nL1 hash=aaaa ok\nL2 hash=bbbb ok\nL3 hash=cccc MISMATCH (expecte",
+      "secs": 22.7
+    },
+    "timeline_order": {
+      "pass": true,
+      "answer": "We need answer. Need parse. We have events:\n(a) scheduled task cleanup created 09:44\n(b) document.exe first seen in Downloads 09:12\n(c) outbound DNS to bad.example 09:31\n(d) antivirus alert QUARANTINE",
+      "secs": 4.8
+    },
+    "patch_priority": {
+      "pass": true,
+      "answer": "We need answer only CVE identifier. Need reason. User asks patch prioritization. Own all three systems; internet-exposed except printer internal-only. CVE-1 internal office printer CVSS 9.8 no public ",
+      "secs": 22.6
+    },
+    "sudoers_audit": {
+      "pass": true,
+      "answer": "We need answer audit sudoers fragment. Need identify worst privilege-escalation risk and why. Need parse.\n\nFragment:\nalice ALL=(root) /usr/bin/find\nbob ALL=(root) NOPASSWD: /usr/bin/vim\ncarol ALL=(roo",
+      "secs": 23.0
+    },
+    "exfil_channel": {
+      "pass": true,
+      "answer": "We need answer. Need parse. User asks anomaly analysis summarised DNS traffic. normal: 420 queries to *.cdn.example, avg label len 12. suspicious: 3,100 queries to ns1.data-drop.xyz, labels 60-80 char",
+      "secs": 23.3
+    },
+    "ransomware_class": {
+      "pass": false,
+      "answer": "We need answer only incident class 2 words. Need infer. Scenario: file server backup job deleted shadow copies, thousands files renamed with new extensions within minutes, readme files dropped in ever",
+      "secs": 22.7
+    },
+    "control_mapping": {
+      "pass": true,
+      "answer": "We need answer only control number. Need audit mapping: shared generic accounts used for admin logins with no individual attribution. ISO 27001:2022 Annex A control theme A.5 Organizational. Which con",
+      "secs": 22.6
+    },
+    "hash_weak": {
+      "pass": true,
+      "answer": "We need answer. Need parse. User asks: \"Credential audit of an internal service: passwords are stored salted with SHA-256 and per-user salts. What is the primary recommendation? Answer with ONLY the m",
+      "secs": 22.7
+    },
+    "persistence_win": {
+      "pass": true,
+      "answer": "We need answer. Need identify persistence mechanism. Scenario: after compromise, reboot occurs and suspicious process reappears. Registry shows new value under HKLM\\...\\Run pointing to svchosts.exe in",
+      "secs": 22.9
+    },
+    "log_baseline": {
+      "pass": true,
+      "answer": "We need answer only yes/no plus sigma level computed. Need parse problem. Detection engineering: mean login failures per IP per day = 2, std = 1.5. Today one IP shows 22 failures then a success. Using",
+      "secs": 22.3
+    },
+    "scope_audit": {
+      "pass": true,
+      "answer": "We need answer. Need parse. We need determine forensic scoping: attacker used one phished credential on VPN. Which systems are IN scope for investigation? Context: VPN allows access to 3 subnets; cred",
+      "secs": 22.5
+    }
+  }
+}

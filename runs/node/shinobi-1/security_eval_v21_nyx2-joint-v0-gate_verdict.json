@@ -1,0 +1,68 @@
+{
+  "model": "nyx2-joint-v0-gate",
+  "security_v21_acc": 0.75,
+  "n": 12,
+  "verdict": "TOO EASY (>0.70)",
+  "detail": {
+    "ioc_noise": {
+      "pass": false,
+      "answer": "We need to triage web server logs to identify malicious IPs. Let's analyze each IP's activity:\n\n1. 203.0.113.9:\n   - GET /.git/config (404) - This is suspicious because it's accessing a Git repository",
+      "secs": 16.4
+    },
+    "pivot_chain": {
+      "pass": true,
+      "answer": "We need to reconstruct the incident chain from the given logs. The logs show:\n\n- fw.log: 10.0.0.5 -> 172.16.2.10:445 ALLOW 09:02 (only external->internal SMB hit today)\n- 172.16.2.10 (file server) aut",
+      "secs": 14.2
+    },
+    "log_gap": {
+      "pass": false,
+      "answer": "We need to analyze the forensic continuity check results to determine what the gap and reboot indicate.\n\nWe have:\n- access.log: last entry 03:41 (normal traffic), next entry 04:19 (POST /upload.php 20",
+      "secs": 18.1
+    },
+    "persistence_combo": {
+      "pass": true,
+      "answer": "We need to rank the four findings by persistence strength for triage (strongest first). The findings are:\n\n1) HKCU Run key: 'OneDriveSync' -> C:\\Users\\build\\AppData\\Roaming\\svchosts.exe\n2) Scheduled t",
+      "secs": 12.8
+    },
+    "sigma_calc": {
+      "pass": true,
+      "answer": "We need to compute the sigma (z-score) level for the given scenario. The baseline is 15 connections/min per host, with a standard deviation of 4. One internal host made 43 connections/min to one exter",
+      "secs": 10.1
+    },
+    "b64_triage": {
+      "pass": true,
+      "answer": "We need to determine the two things the analyst should do FIRST based on the scenario. The scenario: SOC triage, email gateway log shows an attachment whose decoded content is a suspicious launcher sc",
+      "secs": 10.2
+    },
+    "webshell_find": {
+      "pass": true,
+      "answer": "/var/www/html/uploads/favicon.php",
+      "secs": 0.3
+    },
+    "acl_audit": {
+      "pass": true,
+      "answer": "We need to analyze the file server audit scenario. The shared folder \\\\FS01\\Finance has these ACEs:\n\n- FinanceUsers: Modify (folder+subfolders, inherited)\n- Everyone: Read (root only, inherited)\n- DOM",
+      "secs": 18.0
+    },
+    "beacon_cadence": {
+      "pass": false,
+      "answer": "We need answer. Need analyze IDS alert review. Outbound TLS from 10.0.0.33 to 45.61.19.9, 22 connections in 1 hour, inter-arrival times near-constant small jitter, regardless of business hours. Behavi",
+      "secs": 18.0
+    },
+    "cert_audit": {
+      "pass": true,
+      "answer": "We need to identify the three findings categories to fix for a TLS audit of a legacy payment gateway. The gateway supports TLS1.0, TLS1.1, TLS1.2; cipher list includes RC4-SHA and AES128-SHA; cert cha",
+      "secs": 10.8
+    },
+    "forensic_order": {
+      "pass": true,
+      "answer": "We need to determine the correct order to capture for a compromised laptop needed for court: memory encryption keys, disk, running processes. The goal is to gather evidence for a legal investigation. ",
+      "secs": 9.7
+    },
+    "siem_corr": {
+      "pass": true,
+      "answer": "We need to correlate the alerts into one incident. Let's analyze the timeline:\n\n- 09:12: AV quarantined doc.exe on host A\n- 09:13: EDR: doc.exe dropped by winword.exe on host A\n- 09:14: FW: host A -> ",
+      "secs": 7.9
+    }
+  }
+}
