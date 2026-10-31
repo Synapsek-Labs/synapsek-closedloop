@@ -21,7 +21,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
 DATA = [NODE / "work_office.jsonl", NODE / "work_office_v2.jsonl",
-        NODE / "work_sec21.jsonl", NODE / "work_sec22.jsonl"]
+        NODE / "work_sec21.jsonl", NODE / "work_sec22.jsonl",
+        NODE / "work_audit.jsonl"]
+# joint-v2: 2,400 rows (audit bank 400 = vertical #3, pre-registered commit adce3d5).
+# PRE-REGISTERED BARS for joint-v2 gate (frozen BEFORE training runs):
+#   audit_v1_acc >= 0.75  (bot's battery bar), benign_neg_acc >= 0.80,
+#   sec v2.1 >= 0.683 (hold), office >= 0.50 (hold). Never audit-only.
 MODEL_DIR = r"C:\Users\User\hf_models\spark-x2.6-1.7b"
 OUT = NODE / "delta_joint"
 LR = 5e-5
