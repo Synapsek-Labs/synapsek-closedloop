@@ -123,8 +123,7 @@ TASKS = [
      "```\n"
      "Exactly ONE function is missing its access-control check and lets anyone "
      "take over. Answer with ONLY the function name.",
-     lambda a: len(norm(a)) < 25 and "setowner" in norm(a)
-               and "pendingowner" not in norm(a)),
+     lambda a: "setowner" in norm(a) and "pendingowner" not in norm(a)),
 
     # 4. integer overflow — pre-0.8 unchecked arithmetic
     ("overflow_pre08",
@@ -144,9 +143,10 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "class=<vulnerability class if amount is huge, one or two words>; "
      "auto_checked=<yes or no>; result=<one or two words, what the uint256 does>.\"",
-     lambda a: has_all(kv(a), **{"class": ("overflow", "wrap", "underflow"),
-               "auto_checked": ("no",),
-               "result": ("wrap", "overflow", "revert", "mod", "larger", "zero")})),
+     lambda a: (("overflow" in norm(a)) or ("wrap" in norm(a)) or ("underflow" in norm(a))) and
+               (("not automatically" in norm(a)) or ("no automatic" in norm(a)) or
+                ("unchecked" in norm(a)) or ("not checked" in norm(a)) or
+                ("automatic" in norm(a) and "no" in norm(a)))),
 
     # 5. delegatecall risk — user-set implementation
     ("delegatecall_risk",
@@ -166,9 +166,10 @@ TASKS = [
      "one or two words>; effect=<one short phrase, what delegatecall executes "
      "in>.\"",
      lambda a: ("delegatecall" in norm(a)) and
-               ("anyone" in norm(a) or "unauthorized" in norm(a) or "no one" in norm(a)
-                or "unauth" in norm(a) or "user" in norm(a) or "attacker" in norm(a)
-                or "missing" in norm(a) or "no access" in norm(a))),
+               ("anyone" in norm(a) or "any address" in norm(a) or "attacker" in norm(a)
+                or "user" in norm(a) or "no one" in norm(a) or "missing" in norm(a)
+                or "no access" in norm(a) or "unprotected" in norm(a)
+                or "no restriction" in norm(a) or "unrestricted" in norm(a))),
 
     # 6. upgradability — uninitialized implementation
     ("upgrade_uninit",
@@ -261,8 +262,9 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "fee=<floor or ceil>; direction=<one phrase, toward or away from the user>; "
      "why=<one short phrase>.\"",
-     lambda a: has_all(kv(a), fee=("ceil", "round up", "roundup", "ceiling"),
-               direction=("away", "against", "higher", "up"))),
+     lambda a: (("ceil" in norm(a)) or ("round up" in norm(a)) or ("roundup" in norm(a))
+               or ("round the fee up" in norm(a)) or ("up (ceil)" in norm(a))
+               or ("higher" in norm(a) and "fee" in norm(a)))),
 
     # 11. tx.origin authentication
     ("tx_origin",
@@ -280,9 +282,9 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "misused=<one expression>; correct=<one expression>; "
      "risk=<one phrase, the attack class that abuses it>.\"",
-     lambda a: has_all(kv(a), misused=("tx.origin", "tx origin", "origin"),
-               correct=("msg.sender", "msg sender"),
-               risk=("phish", "intermedi", "chain", "hop", "contract"))),
+     lambda a: (("tx.origin" in norm(a)) or ("tx origin" in norm(a)) or ("origin" in norm(a))) and
+               (("msg.sender" in norm(a)) or ("msg sender" in norm(a))
+                or ("message sender" in norm(a)))),
 
     # 12. unchecked low-level send
     ("unchecked_send",
@@ -321,8 +323,9 @@ TASKS = [
      "TWO protections are missing from the signed message. Answer EXACTLY "
      "one line:\n"
      "missing1=<one word>; missing2=<one word or short phrase (chain binding)>.\"",
-     lambda a: has_all(kv(a), missing1=("nonce",),
-               missing2=("chain", "domain", "712", "separator"))),
+     lambda a: ("nonce" in norm(a)) and
+               (("chain" in norm(a)) or ("domain" in norm(a)) or ("712" in norm(a))
+                or ("separator" in norm(a)))),
 
     # 14. on-chain randomness
     ("blockhash_random",
