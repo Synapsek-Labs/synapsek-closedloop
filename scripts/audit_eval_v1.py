@@ -22,6 +22,13 @@ OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 LABEL = sys.argv[1] if len(sys.argv) > 1 else "model"
 BENIGN = ("benign_withdraw", "benign_treasury")
 
+# Fixed harness framing (same prompt for base and any trained model):
+SYS = ("You are a precise smart-contract security auditor. Answer EVERY "
+       "task with ONLY the exact answer line requested by the task "
+       "(the key=value; format it specifies, a single function name, or "
+       "YES/NO first). No preamble, no explanation, no restating the task. "
+       "If the code is safe, say so.")
+
 
 def norm(s):
     return re.sub(r"\s+", " ", s.lower().strip())
@@ -331,7 +338,8 @@ TASKS = [
 
 def text_task(prompt):
     r = requests.post(BASE_URL, json={
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "system", "content": SYS},
+                     {"role": "user", "content": prompt}],
         "temperature": 0.2, "max_tokens": 800, "stream": False,
     }, timeout=600)
     r.raise_for_status()
