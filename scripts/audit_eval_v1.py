@@ -13,11 +13,12 @@
 #
 # Run against :8001 (spark server, base = Spark-X2.6-1.7B):
 #   .venv\Scripts\python.exe scripts\audit_eval_v1.py <label>
-import json, re, sys, time
+import json, os, re, sys, time
 from pathlib import Path
 import requests
 
-BASE_URL = "http://127.0.0.1:8001/v1/chat/completions"
+BASE_URL = os.environ.get(
+    "NYX_BASE_URL", "http://127.0.0.1:8001/v1/chat/completions")
 OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 LABEL = sys.argv[1] if len(sys.argv) > 1 else "model"
 BENIGN = ("benign_withdraw", "benign_treasury")
