@@ -30,6 +30,23 @@ SEED = 7
 MAXLEN = 2048
 
 
+def norm(messages):
+    """tool_calls arguments str->dict; drop None tool_calls (Spark template)."""
+    out = []
+    for m in messages:
+        m = dict(m)
+        tcs = m.get("tool_calls")
+        if tcs is None:
+            m.pop("tool_calls", None)
+        else:
+            for tc in tcs:
+                a = tc["function"]["arguments"]
+                tc["function"]["arguments"] = (json.loads(a)
+                                               if isinstance(a, str) else a)
+        out.append(m)
+    return out
+
+
 def main():
     random.seed(SEED)
     torch.manual_seed(SEED)
@@ -56,7 +73,7 @@ def main():
 
     pairs, skipped = [], 0
     for r in rows:
-        msgs = r["messages"]
+        msgs = norm(r["messages"])
         for i, m in enumerate(msgs):
             if m["role"] != "assistant":
                 continue
