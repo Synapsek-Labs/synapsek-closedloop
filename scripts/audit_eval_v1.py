@@ -27,6 +27,26 @@ def norm(s):
     return re.sub(r"\s+", " ", s.lower().strip())
 
 
+def kv(answer):
+    """Parse key=value;value pairs (case-insensitive) from an answer.
+    Strict: rambles without the required format parse to {} and fail."""
+    out = {}
+    for m in re.finditer(r"([a-z0-9_]+)\s*=\s*([^;]{1,120})", answer.lower()):
+        out[m.group(1)] = m.group(2).strip()
+    return out
+
+
+def has_all(d, **want):
+    """Each want[k] is a tuple/str of accepted substrings for key k."""
+    for k, accepts in want.items():
+        if k not in d:
+            return False
+        acc = accepts if isinstance(accepts, tuple) else (accepts,)
+        if not any(x in d[k] for x in acc):
+            return False
+    return True
+
+
 def yes_no(s, want):
     """First meaningful token decides (yes/no answers drift verbose)."""
     m = re.match(r"\s*(yes|no)\b", s.strip(), re.I)
@@ -50,9 +70,8 @@ TASKS = [
      "Which vulnerability class is this? Answer EXACTLY one line:\n"
      "vuln=<one or two words>; func=<function name>; fix=<one short phrase "
      "(what must happen before the external call)>.\"",
-     lambda a: ("reentran" in norm(a)) and ("withdraw" in norm(a)) and
-               ("state" in norm(a) or "balance" in norm(a) or "effect" in norm(a)
-                or "before" in norm(a) or "update" in norm(a) or "first" in norm(a))),
+     lambda a: has_all(kv(a), vuln=("reentran",), func=("withdraw",),
+               fix=("state", "balance", "effect", "update", "before", "first"))),
 
     # 2. oracle manipulation — spot DEX reserves as price feed
     ("oracle_spot",
@@ -70,9 +89,9 @@ TASKS = [
      "What is the price source and its key weakness? Answer EXACTLY one line:\n"
      "source=<what the price is computed from>; weakness=<one phrase>; "
      "attack=<one phrase, how an attacker moves the price>.\"",
-     lambda a: ("reserve" in norm(a) or "pair" in norm(a) or "dex" in norm(a)
-                or "pool" in norm(a) or "amm" in norm(a) or "uniswap" in norm(a)) and
-               ("flash" in norm(a) or "manipulat" in norm(a) or "swap" in norm(a))),
+     lambda a: has_all(kv(a), source=("uniswap", "pair", "dex", "amm", "pool", "reserve"),
+               weakness=("manipul", "flash", "spot"),
+               attack=("flash", "swap", "manipul"))),
 
     # 3. access control — one unguarded privileged function among guarded ones
     ("access_control",
@@ -85,7 +104,8 @@ TASKS = [
      "```\n"
      "Exactly ONE function is missing its access-control check and lets anyone "
      "take over. Answer with ONLY the function name.",
-     lambda a: "setowner" in norm(a) and "deposit" not in norm(a.replace("set", ""))),
+     lambda a: len(norm(a)) < 25 and "setowner" in norm(a)
+               and "pendingowner" not in norm(a)),
 
     # 4. integer overflow — pre-0.8 unchecked arithmetic
     ("overflow_pre08",
@@ -105,8 +125,9 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "class=<vulnerability class if amount is huge, one or two words>; "
      "auto_checked=<yes or no>; result=<one or two words, what the uint256 does>.\"",
-     lambda a: ("overflow" in norm(a) or "wrap" in norm(a) or "underflow" in norm(a)) and
-               ("no" in norm(a).split() or "unchecked" in norm(a) or " 0.7" in norm(a))),
+     lambda a: has_all(kv(a), **{"class": ("overflow", "wrap", "underflow"),
+               "auto_checked": ("no",),
+               "result": ("wrap", "overflow", "revert", "mod", "larger", "zero")})),
 
     # 5. delegatecall risk — user-set implementation
     ("delegatecall_risk",
@@ -125,10 +146,10 @@ TASKS = [
      "op=<the dangerous opcode, one word>; control=<who can set the target, "
      "one or two words>; effect=<one short phrase, what delegatecall executes "
      "in>.\"",
-     lambda a: ("delegatecall" in norm(a)) and
-               ("anyone" in norm(a) or "unauthorized" in norm(a) or "no one" in norm(a)
-                or "unauth" in norm(a) or "user" in norm(a) or "attacker" in norm(a)
-                or "missing" in norm(a) or "no access" in norm(a))),
+     lambda a: has_all(kv(a), op=("delegatecall",),
+               control=("anyone", "user", "attacker", "unauth", "no access",
+                        "missing", "none", "no auth"),
+               effect=("storage", "context", "wallet", "proxy", "contract"))),
 
     # 6. upgradability — uninitialized implementation
     ("upgrade_uninit",
@@ -145,8 +166,10 @@ TASKS = [
      "implementation? Answer EXACTLY one line:\n"
      "missing=<one call, function name in snake case>; "
      "risk=<one phrase, what the attacker gains>.\"",
-     lambda a: ("disableinitializers" in norm(a) or "disable_initializers" in norm(a)
-                or "initializer" in norm(a))),
+     lambda a: has_all(kv(a),
+               missing=("disableinitializers", "disable_initializers",
+                        "_disableinitializer"),
+               risk=("own", "take", "admin", "control", "proxy", "upgrade"))),
 
     # 7. BENIGN NEGATIVE — correct CEI + guard (must say NO)
     ("benign_withdraw",
@@ -207,9 +230,10 @@ TASKS = [
      "rounding? Answer EXACTLY one line:\n"
      "class=<one or two words>; first_beneficiary=<who profits, one or two words>; "
      "fix=<one phrase>.\"",
-     lambda a: ("rounding" in norm(a) or "inflation" in norm(a) or "donation" in norm(a)
-                or "first" in norm(a) or "share" in norm(a)) and
-               ("first" in norm(a) or "attacker" in norm(a) or "depositor" in norm(a))),
+     lambda a: has_all(kv(a), **{"class": ("rounding", "inflation", "donation", "first", "share"),
+               "first_beneficiary": ("first", "attacker", "depositor"),
+               "fix": ("virtual", "offset", "decimal", "minimum", "zero",
+                    "round", "share", "dust")})),
 
     # 10. rounding direction — fees must round against the user
     ("rounding_fee",
@@ -219,8 +243,8 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "fee=<floor or ceil>; direction=<one phrase, toward or away from the user>; "
      "why=<one short phrase>.\"",
-     lambda a: ("ceil" in norm(a).replace(" ", "") or
-               "roundup" in norm(a).replace(" ", ""))),
+     lambda a: has_all(kv(a), fee=("ceil", "round up", "roundup", "ceiling"),
+               direction=("away", "against", "higher", "up"))),
 
     # 11. tx.origin authentication
     ("tx_origin",
@@ -238,8 +262,9 @@ TASKS = [
      "Answer EXACTLY one line:\n"
      "misused=<one expression>; correct=<one expression>; "
      "risk=<one phrase, the attack class that abuses it>.\"",
-     lambda a: ("tx.origin" in norm(a) or "origin" in norm(a) or "tx origin" in norm(a)) and
-               ("msg.sender" in norm(a))),
+     lambda a: has_all(kv(a), misused=("tx.origin", "tx origin", "origin"),
+               correct=("msg.sender", "msg sender"),
+               risk=("phish", "intermedi", "chain", "hop", "contract"))),
 
     # 12. unchecked low-level send
     ("unchecked_send",
@@ -254,9 +279,8 @@ TASKS = [
      "send() can fail silently. What does the code fail to do? "
      "Answer EXACTLY one line:\n"
      "missing=<one short phrase>; result=<one short phrase, what breaks>.\"",
-     lambda a: ("return" in norm(a) or "result" in norm(a) or "ok" in norm(a)) and
-               ("check" in norm(a) or "require" in norm(a) or "revert" in norm(a)
-                or "ignore" in norm(a) or "ignored" in norm(a) or "handle" in norm(a))),
+     lambda a: has_all(kv(a), missing=("check", "require", "revert", "return", "ignore"),
+               result=("fail", "stuck", "loss", "bricked", "wrong", "silent"))),
 
     # 13. signature replay — missing nonce + domain separator
     ("sig_replay",
@@ -278,9 +302,8 @@ TASKS = [
      "TWO protections are missing from the signed message. Answer EXACTLY "
      "one line:\n"
      "missing1=<one word>; missing2=<one word or short phrase (chain binding)>.\"",
-     lambda a: ("nonce" in norm(a)) and
-               ("domain" in norm(a) or "chainid" in norm(a) or "chain" in norm(a)
-                or "chain id" in norm(a) or "712" in norm(a))),
+     lambda a: has_all(kv(a), missing1=("nonce",),
+               missing2=("chain", "domain", "712", "separator"))),
 
     # 14. on-chain randomness
     ("blockhash_random",
@@ -299,10 +322,10 @@ TASKS = [
      "one line:\n"
      "predictable=<yes or no>; source=<one or two words, what the seed comes "
      "from>; replacement=<one or two words, the standard safe source>.\"",
-     lambda a: (("yes" in norm(a).split()[:3] or "yes" in norm(a)) and
-               ("block" in norm(a) or "chain" in norm(a)) and
-               ("vrf" in norm(a) or "commit" in norm(a) or "reveal" in norm(a)
-                or "oracle" in norm(a) or "off-chain" in norm(a) or "off chain" in norm(a)))),
+     lambda a: has_all(kv(a), predictable=("yes",),
+               source=("block", "chain", "hash"),
+               replacement=("vrf", "commit", "reveal", "oracle",
+                            "off-chain", "off chain"))),
 ]
 
 
