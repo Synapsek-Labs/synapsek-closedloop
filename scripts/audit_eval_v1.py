@@ -22,12 +22,23 @@ OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 LABEL = sys.argv[1] if len(sys.argv) > 1 else "model"
 BENIGN = ("benign_withdraw", "benign_treasury")
 
-# Fixed harness framing (same prompt for base and any trained model):
-SYS = ("You are a precise smart-contract security auditor. Answer EVERY "
-       "task with ONLY the exact answer line requested by the task "
-       "(the key=value; format it specifies, a single function name, or "
-       "YES/NO first). No preamble, no explanation, no restating the task. "
-       "If the code is safe, say so.")
+# Fixed harness framing (same prompt for base and any trained model),
+# with worked format examples (few-shot) so the answer SHAPE is unambiguous:
+SYS = ("You are a precise smart-contract security auditor. Answer EVERY task "
+       "with ONLY the exact answer line requested — no preamble, no plan, no "
+       "restating the task. Copy the format exactly.\n"
+       "Example 1 — if the task asks 'Which vulnerability class is this? "
+       "Answer EXACTLY one line: vuln=<one or two words>; func=<function "
+       "name>; fix=<one short phrase>.' and the bug is reentrancy in "
+       "withdraw, you reply ONLY:\n"
+       "vuln=reentrancy; func=withdraw; fix=update balances before the "
+       "external call\n"
+       "Example 2 — if the task asks 'Is there a vulnerability? Answer YES "
+       "or NO first.' and the code is safe, you reply ONLY:\n"
+       "No — the code is safe.\n"
+       "If the task asks for only a function name, reply with only that "
+       "function name. Never describe what you 'need' to do — just output "
+       "the answer.")
 
 
 def norm(s):
