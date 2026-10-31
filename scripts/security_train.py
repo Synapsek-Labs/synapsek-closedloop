@@ -1,10 +1,12 @@
-# Nyx-2 security SFT: train Spark-X2.6-1.7B LoRA delta on the 400
-# machine-verified audit/forensic answers (work_sec21.jsonl).
+# Nyx-2 JOINT trainer: office(800) + security(400) = 1200 verified
+# trajectories from base. One delta, both domains — sec-only training
+# regressed office (68.2->40.9 on office eval v2), so the single-delta
+# joint bank is the design.
 # Same replay-anchored recipe as nyx2_office_train.py (prompt=chat-template
 # prefix, target=assistant turn, -100 mask on prompt, commonprefix align).
-# PRE-REGISTERED GATE: merged security_eval_v21 battery >= base 58.3% + 0.10
-# = 68.3%, AND office eval v2 battery no-regression (>= 0.50), AND security
-# v1 battery no-collapse (>= base 83% minus tolerance 0.15 => >= 0.68).
+# PRE-REGISTERED GATE: security_eval_v21 battery >= base 58.3% + 0.10
+# = 68.3%, AND office eval v2 battery >= 0.50, AND security
+# v1 battery no-collapse (>= 0.68).
 # Run on shinobi (spark-venv, tf 4.57 for Spark remote code):
 #   spark-venv\Scripts\python.exe scripts\security_train.py
 import json, random, sys, io, time
@@ -18,9 +20,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
-DATA = NODE / "work_sec21.jsonl"
+DATA = [NODE / "work_office.jsonl", NODE / "work_office_v2.jsonl",
+        NODE / "work_sec21.jsonl"]
 MODEL_DIR = r"C:\Users\User\hf_models\spark-x2.6-1.7b"
-OUT = NODE / "delta_sec21"
+OUT = NODE / "delta_joint"
 LR = 5e-5
 EPOCHS = 2
 SEED = 7
@@ -30,9 +33,12 @@ MAXLEN = 2048
 def main():
     random.seed(SEED)
     torch.manual_seed(SEED)
-    rows = [json.loads(l) for l in
-            DATA.read_text(encoding="utf-8").splitlines() if l.strip()]
-    print(f"[sec-train] {len(rows)} verified answers", flush=True)
+    rows = []
+    for f in DATA:
+        if f.exists():
+            rows += [json.loads(l) for l in
+                     f.read_text(encoding="utf-8").splitlines() if l.strip()]
+    print(f"[joint-train] {len(rows)} verified rows", flush=True)
 
     tok = AutoTokenizer.from_pretrained(MODEL_DIR, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
