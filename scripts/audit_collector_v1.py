@@ -38,8 +38,16 @@ SYS = ("You are a precise smart-contract security auditor. Answer EVERY task "
 def log(msg):
     line = f"[audit1] {time.strftime('%H:%M:%S')} {msg}"
     print(line, flush=True)
-    with open(LOG, "a", encoding="utf-8") as f:
-        f.write(line + "\n")
+    # WinErr 13: the chain's wait-loop PowerShell polls this log every 60s
+    # (Select-String/Get-Content open without share-write) -> retry the append.
+    for attempt in range(30):
+        try:
+            with open(LOG, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
+            return
+        except PermissionError:
+            time.sleep(2)
+    raise RuntimeError(f"collect log locked after 60s: {LOG}")
 
 
 def gen_tasks():
