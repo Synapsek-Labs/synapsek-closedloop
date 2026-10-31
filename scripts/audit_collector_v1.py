@@ -19,8 +19,10 @@ OUT = Path(os.environ.get(
 ))
 WORK = OUT / "work_audit.jsonl"
 LOG = OUT / "audit1_collect_log.txt"
-TARGET = 400
-N_TASKS = 700
+TARGET = 550          # v1.1: 400 existing + ~150 top-up (benign quota below)
+N_TASKS = 1400
+BENIGN_KINDS = (7, 8)
+BENIGN_TARGET = 80
 
 PREFIX = "Defensive audit of this Solidity (blue-team: identify and fix):\n"
 
@@ -156,9 +158,10 @@ def gen_tasks():
                       f"    constructor() {{ }}   // empty\n}}\n```\n"
                       f"The proxy points at LogicV1. What call is missing from "
                       f"the implementation constructor so an attacker cannot "
-                      f"call initialize() DIRECTLY on the implementation? "
-                      f"Answer EXACTLY one line: missing=<one call>; "
-                      f"risk=<what the attacker gains>.\"")
+                      f"call initialize() DIRECTLY on the implementation? (Standard "
+                      f"OpenZeppelin-style UUPS implementations lock their "
+                      f"constructors.) Answer EXACTLY one line: "
+                      f"missing=<one call>; risk=<what the attacker gains>.\"")
             def chk(a):
                 al = a.lower().replace(" ", "").replace("_", "")
                 return ("disableinitializers" in al or "disableinitializer" in al)
@@ -179,7 +182,9 @@ def gen_tasks():
                       f"('');\n"
                       f"        require(ok);\n    }}\n}}\n```\n"
                       f"Is there a reentrancy vulnerability here? Answer YES "
-                      f"or NO first, then one short reason.\"")
+                      f"only if you can name a concrete exploitable path; "
+                      f"otherwise answer NO. YES or NO first, then one short "
+                      f"reason.\"")
             def chk(a):
                 import re as _re
                 m = _re.match(r"\s*(no)\b", a.strip(), _re.I)
@@ -200,8 +205,11 @@ def gen_tasks():
                       f"        require(msg.sender == pendingOwner);\n"
                       f"        owner = pendingOwner; pendingOwner = "
                       f"address(0);\n    }}\n}}\n```\n"
-                      f"Is there an access-control vulnerability here? Answer "
-                      f"YES or NO first, then one short reason.\"")
+                      f"Is there an access-control vulnerability here (a "
+                      f"privileged function without auth, or a takeover "
+                      f"path)? Answer YES only if you can name a concrete "
+                      f"exploitable path; otherwise answer NO. YES or NO "
+                      f"first, then one short reason.\"")
             def chk(a):
                 import re as _re
                 m = _re.match(r"\s*(no)\b", a.strip(), _re.I)
@@ -276,9 +284,12 @@ def gen_tasks():
                       f"phrase>; result=<what breaks>.\"")
             def chk(a):
                 al = a.lower()
-                return ("return" in al or "result" in al or "ok" in al) and (
+                return ("return" in al or "result" in al or "ok" in al
+                        or "error handling" in al or "error" in al
+                        or "silently" in al or "silent" in al) and (
                     "check" in al or "require" in al or "revert" in al
-                    or "ignor" in al or "handle" in al)
+                    or "ignor" in al or "handle" in al or "handling" in al
+                    or "verif" in al)
             tasks[i] = (prompt, chk)
         # --- k13 signature replay ---
         elif k == 13:
@@ -344,9 +355,15 @@ def main():
     tasks = gen_tasks()
     banked = len(done)
     log(f"start: banked={banked}/{TARGET}")
+    benign_done = sum(1 for line in
+                      (WORK.read_text(encoding="utf-8").splitlines()
+                       if WORK.exists() else [])
+                      if line.strip()
+                      and json.loads(line)["kind"] in BENIGN_KINDS)
+    log(f"start: benign banked={benign_done}/{BENIGN_TARGET}")
     for i in sorted(tasks):
-        if banked >= TARGET:
-            log(f"target reached: {banked}"); break
+        if banked >= TARGET and benign_done >= BENIGN_TARGET:
+            log(f"target reached: {banked} (benign {benign_done})"); break
         if i in done:
             continue
         prompt, chk = tasks[i]
@@ -363,6 +380,8 @@ def main():
             f"({dt:.0f}s) banked={banked + 1 if ok else banked}")
         if ok:
             banked += 1
+            if 1 + i % 14 in BENIGN_KINDS:
+                benign_done += 1
             with open(WORK, "a", encoding="utf-8") as f:
                 f.write(json.dumps({"id": i, "kind": 1 + i % 14,
                                     "secs": round(dt),
