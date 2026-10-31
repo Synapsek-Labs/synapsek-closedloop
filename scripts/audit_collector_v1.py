@@ -26,6 +26,14 @@ BENIGN_TARGET = 80
 
 PREFIX = "Defensive audit of this Solidity (blue-team: identify and fix):\n"
 
+# Same SYS framing as audit_eval_v1.py battery + the safety clause that stops
+# the teacher from fabricating vulnerabilities on benign contracts.
+SYS = ("You are a precise smart-contract security auditor. Answer EVERY task "
+       "with ONLY the exact answer line requested - no preamble, no plan, no "
+       "restating the task. Copy the format exactly. Many contracts you review "
+       "are SAFE: answer YES only when you can trace a complete concrete "
+       "attack path through the actual code, otherwise answer NO.")
+
 
 def log(msg):
     line = f"[audit1] {time.strftime('%H:%M:%S')} {msg}"
@@ -339,7 +347,8 @@ def gen_tasks():
 
 def answer(prompt):
     r = requests.post(BASE_URL, json={
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "system", "content": SYS},
+                      {"role": "user", "content": prompt}],
         "temperature": 0.2, "max_tokens": 900, "stream": False,
     }, timeout=900)
     r.raise_for_status()
