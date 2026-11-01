@@ -76,3 +76,15 @@ discipline only our pipeline has. We are also our own best test bed (Hebri nodes
 
 Product lineup (LOCKED): 1) Hebri nodes (learn-by-doing infra) 2) NYX family (Nano/Core/Pro)
 3) Genesis (research bet) 4) Token Diet (serving-cost invention).
+
+
+## FINAL PLAN LOCK (2026-11-01, user: "make sure this stays as final plan")
+Pillars: 1) Hebri nodes 2) NYX family (Nano 1.7B -> Core 8B -> Pro-Sec 27-30B, defensive
+verified layer on top of security-capable open bases; public model work stays blue-team,
+offensive capability lives in locally-run downloaded bases for authorized use only)
+3) Token Diet (TD-0..TD-4) 4) Genesis. Monetization: local-first free tier -> $15 member
+/ $49 agent subscriptions (caps + Token Diet stack, 77-84% margins) -> per-audit fees ->
+OpenRouter per-token at scale -> funding via Genesis paper. Research (Colibri 2 / big-model
+feeding): kill-test FIRST per pre-flight gate, register in internal vault, never public
+until launch. Nyx Sec Node for Hebri: blue-box triage (deterministic tools + local Nyx
+models + benign-precision discipline + fix re-verification), blue-team product only.
