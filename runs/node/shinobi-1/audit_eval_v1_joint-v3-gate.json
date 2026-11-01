@@ -1,0 +1,81 @@
+{
+  "model": "joint-v3-gate",
+  "audit_v1_acc": 0.9285714285714286,
+  "n": 14,
+  "benign_neg_acc": 1.0,
+  "benign_fp_rate": 0.0,
+  "vuln_recall": 0.9166666666666666,
+  "verdict": "TOO EASY (>0.70) -> harden",
+  "detail": {
+    "reentrancy_eth": {
+      "pass": true,
+      "answer": "The vulnerability is reentrancy in the withdraw function. The fix is to update the balances before the external call.\n\nvuln=reentrancy; func=withdraw; fix=update balances before the external call",
+      "secs": 1.6
+    },
+    "oracle_spot": {
+      "pass": true,
+      "answer": "The price is computed from the Uniswap V2 pool reserves, specifically the ratio of DAI to WETH. The key weakness is that this is not a reliable price source for lending operations. An attacker can man",
+      "secs": 2.2
+    },
+    "access_control": {
+      "pass": true,
+      "answer": "The function that is missing its access-control check and lets anyone take over is setOwner. It should have an access-control check to ensure the new owner is the current owner or a trusted party.\n\nse",
+      "secs": 1.0
+    },
+    "overflow_pre08": {
+      "pass": true,
+      "answer": "The compiler version 0.7.6 does not automatically check arithmetic overflow for Solidity contracts. When `amount` is huge, the `owed[to] += amount` and `totalPaid += amount` operations can result in o",
+      "secs": 1.8
+    },
+    "delegatecall_risk": {
+      "pass": true,
+      "answer": "The contract has a vulnerable `execute` function that calls `impl.delegatecall(data)`, which allows an attacker to reentrancy attack by repeatedly calling the wallet's own code. The dangerous opcode i",
+      "secs": 7.6
+    },
+    "upgrade_uninit": {
+      "pass": false,
+      "answer": "The missing piece is that the implementation contract has an empty constructor, which allows an attacker to directly call initialize() and set value = 1, bypassing the proxy. The fix would be to add a",
+      "secs": 11.5
+    },
+    "benign_withdraw": {
+      "pass": true,
+      "answer": "The contract uses a `locked` boolean flag with the `noReentry` modifier, which prevents reentrancy attacks by ensuring that during any execution of `withdraw`, the `locked` state is set to true, and a",
+      "secs": 3.3
+    },
+    "benign_treasury": {
+      "pass": true,
+      "answer": "The contract has a standard two-step ownership transfer pattern with proper access control using the `onlyOwner` modifier and `pendingOwner` state. There are no vulnerabilities in this specific code.\n",
+      "secs": 3.3
+    },
+    "vault_inflation": {
+      "pass": true,
+      "answer": "The vulnerability is in the deposit function where the first depositor doesn't get the correct share price. When totalAssets is 0 and an attacker deposits 1 wei first, the shares calculation becomes: ",
+      "secs": 17.5
+    },
+    "rounding_fee": {
+      "pass": true,
+      "answer": "The fee is amountIn * 30 / 10000. To never undercharge the user, we need to ensure the fee is at least as much as the actual amount that should be charged. Since the actual fee is amountIn * 30 / 1000",
+      "secs": 8.3
+    },
+    "tx_origin": {
+      "pass": true,
+      "answer": "The contract uses `tx.origin` as the authentication value for the `owner` address. This is a vulnerability because `tx.origin` is the address of the transaction that initiated the transfer, which can ",
+      "secs": 14.7
+    },
+    "unchecked_send": {
+      "pass": true,
+      "answer": "The contract's `payout` function calls `to.send(amount)` and ignores the result. This means that if the transfer fails silently, the function will not revert the transaction and will not update the ba",
+      "secs": 1.9
+    },
+    "sig_replay": {
+      "pass": true,
+      "answer": "The missing protections are:\n1. Nonce or block number in the signature\n2. Chainid or hashing of the chainid\n\nSo:\nmissing1=nonce; missing2=chainid",
+      "secs": 1.0
+    },
+    "blockhash_random": {
+      "pass": true,
+      "answer": "The lottery contract uses the blockhash of the previous block as the seed, which is predictable and can be manipulated by validators or builders. The replacement should be a standard safe source like ",
+      "secs": 9.8
+    }
+  }
+}

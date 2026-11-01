@@ -1,0 +1,119 @@
+{
+  "model": "joint-v3-gate3",
+  "office_v2_acc": 0.7727272727272727,
+  "n": 22,
+  "v1_acc": 0.6,
+  "v2_acc": 0.9166666666666666,
+  "detail": {
+    "notes": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 2.4
+    },
+    "sum": {
+      "pass": false,
+      "tool_calls": 8,
+      "secs": 30.4
+    },
+    "rename": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 1.9
+    },
+    "sort": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 4.0
+    },
+    "mkdir": {
+      "pass": true,
+      "tool_calls": 2,
+      "secs": 3.5
+    },
+    "count": {
+      "pass": false,
+      "tool_calls": 6,
+      "secs": 21.5
+    },
+    "avg": {
+      "pass": false,
+      "tool_calls": 8,
+      "secs": 41.7
+    },
+    "append": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 3.6
+    },
+    "max": {
+      "pass": false,
+      "tool_calls": 8,
+      "secs": 36.1
+    },
+    "filter": {
+      "pass": true,
+      "tool_calls": 8,
+      "secs": 21.8
+    },
+    "v2_10": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 4.4
+    },
+    "v2_11": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 3.7
+    },
+    "v2_12": {
+      "pass": true,
+      "tool_calls": 3,
+      "secs": 8.7
+    },
+    "v2_13": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 1.7
+    },
+    "v2_14": {
+      "pass": false,
+      "tool_calls": 1,
+      "secs": 6.6
+    },
+    "v2_15": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 5.2
+    },
+    "v2_16": {
+      "pass": true,
+      "tool_calls": 2,
+      "secs": 5.5
+    },
+    "v2_17": {
+      "pass": true,
+      "tool_calls": 3,
+      "secs": 9.0
+    },
+    "v2_18": {
+      "pass": true,
+      "tool_calls": 5,
+      "secs": 14.9
+    },
+    "v2_19": {
+      "pass": true,
+      "tool_calls": 2,
+      "secs": 5.9
+    },
+    "v2_20": {
+      "pass": true,
+      "tool_calls": 3,
+      "secs": 6.3
+    },
+    "v2_21": {
+      "pass": true,
+      "tool_calls": 1,
+      "secs": 2.8
+    }
+  }
+}
