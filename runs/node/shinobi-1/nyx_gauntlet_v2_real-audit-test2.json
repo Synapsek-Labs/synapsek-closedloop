@@ -1,0 +1,78 @@
+{
+ "tag": "real-audit-test2",
+ "ts": "2026-11-01 20:01:11",
+ "model_served": "http://127.0.0.1:8001/v1/chat/completions",
+ "real_vuln_detected": "6/7",
+ "real_detect_rate": 0.8571428571428571,
+ "benign_false_alarms": "0/5",
+ "verdict": "PASS",
+ "detail": [
+  {
+   "file": "access_control/parity_wallet_bug_1.sol",
+   "fact": "parity wallet 2017 ($31M + $150M frozen)",
+   "hit": true,
+   "answer": "I need to audit this Solidity contract carefully. It's a multi-sig wallet with specific event handling and owner management. Let me analyze it step by step for vulnerabilities.\n\nFirst, let's understand the contract structure:\n- WalletEvents: defines events for confirmations, revokes, owner changes, etc.\n- WalletAbi: provides API functions for walle"
+  },
+  {
+   "file": "arithmetic/rubixi.sol",
+   "fact": "RubiXi pyramid scheme arithmetic",
+   "hit": true,
+   "answer": "I need to audit this Solidity contract for vulnerabilities. Let me analyze it carefully.\n\nThe contract is a standard token contract with:\n- balances mapping\n- totalSupply uint\n- Token constructor\n- transfer function\n- balanceOf function\n\nLooking at the transfer function, I can see it's using the standard pattern for transferring tokens, which is ge"
+  },
+  {
+   "file": "reentrancy/0x3b0e2a34bb8c3e4e9ed6ba4618ab00fdec46f6f1.sol",
+   "fact": "real reentrancy-wallet exploit",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is named PRIVATE_ETH_CELL and contains several functions. Let's examine it carefully.\n\nFirst, note that the contract uses `pragma solidity ^0.4.19;` which is an older version of Solidity. This might be relevant for some vulnerabilities that were fixed in later versions"
+  },
+  {
+   "file": "denial_of_service/0x411a2619c22b0e4c6b6b4b9c9d8e1e3f2a5b7c9d.sol",
+   "fact": "DoS gas griefing",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is named \"DosGas\" (likely \"DoS Gas\" or something similar). Let's examine it carefully.\n\nFirst, the contract uses Solidity version 0.4.25, which is quite old. It has several potential issues:\n\n1. **Reentrancy Attack**: The `emptyCreditors` function modifies the `credito"
+  },
+  {
+   "file": "front_running/0x6e4694d760467ba7cdffd1e6b678a3470e2c2b6a.sol",
+   "fact": "front-running escrow",
+   "hit": false,
+   "answer": "We need to analyze the Solidity contract for vulnerabilities. The contract is from Solidity 0.4.2, which is quite old. Let's go through it step by step.\n\nFirst, note that the contract has a `Player[2]` array, which is public for debug purposes. This is not a vulnerability per se, but it's a design choice.\n\nThe contract has an `OddsAndEvens` contrac"
+  },
+  {
+   "file": "time_manipulation/0x372f58f880dd6d342d6fffe4228d5d1ffe3f9b6e.sol",
+   "fact": "timestamp roulette",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. Let's go through it carefully.\n\nThe contract is \"EtherLotto\" with the following features:\n- TICKET_AMOUNT = 10, FEE_AMOUNT = 1.\n- bank is set to msg.sender in constructor.\n- pot is public.\n- play() function: requires msg.value == TICKET_AMOUNT, then adds msg.value to pot, computes "
+  },
+  {
+   "file": "access_control/0x1b56eceba8e0b26fa2d0b1b2bbaec1c1e0b3a1d2.sol",
+   "fact": "access-control loss",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is named \"Wallet\" with a constructor that is wrongly named, allowing anyone to become 'creator' and withdraw all funds. The contract has an `initWallet` function that sets `creator = msg.sender`, which is called from the constructor. Since the constructor is not proper"
+  },
+  {
+   "file": "benign/access_Roles.sol",
+   "false_alarm": false,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is a simple role management library with add, remove, and has functions. It uses a Role struct with a mapping of address to bool. The functions seem to follow standard patterns and appear safe from a typical attack perspective. However, we should check for any subtle v"
+  },
+  {
+   "file": "benign/lifecycle_Pausable.sol",
+   "false_alarm": false,
+   "answer": "The contract is safe. It properly implements the Pausable contract with correct modifiers and state management. The `_paused` flag is properly initialized to false in the constructor, and the pause/unpause operations are correctly restricted to the Pauser role. There are no vulnerabilities in this implementation.\n<tool_call>"
+  },
+  {
+   "file": "benign/ownership_Ownable.sol",
+   "false_alarm": false,
+   "answer": "Let me analyze this Solidity contract carefully.\n\nThe contract is called \"Ownable\" and it follows the standard pattern for an ownership contract. Let me check for any vulnerabilities.\n\n1. **Constructor**: Sets the initial owner to the deployer, which is correct.\n2. **owner()**: Returns the current owner address, correct.\n3. **isOwner()**: Checks if"
+  },
+  {
+   "file": "benign/token_ERC20_ERC20Detailed.sol",
+   "false_alarm": false,
+   "answer": "The contract is safe. It properly implements the ERC20 detailed contract with immutable name, symbol, and decimals, and correctly returns these values. There are no vulnerabilities present in the provided code.\n\nThe contract follows standard ERC20 practices and includes proper access control with the constructor setting the immutable attributes, an"
+  },
+  {
+   "file": "benign/token_ERC721_ERC721.sol",
+   "false_alarm": false,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is an ERC721 implementation with additional features like operator approvals and using SafeMath. We need to check for known vulnerabilities such as Reentrancy Attack, Reentrancy Guard, Approve-Transfer Attack, etc.\n\nFirst, let's review the contract's methods and see if"
+  }
+ ]
+}

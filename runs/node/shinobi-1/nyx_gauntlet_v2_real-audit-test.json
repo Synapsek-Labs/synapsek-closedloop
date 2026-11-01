@@ -1,0 +1,53 @@
+{
+ "tag": "real-audit-test",
+ "ts": "2026-11-01 19:57:32",
+ "model_served": "http://127.0.0.1:8001/v1/chat/completions",
+ "real_vuln_detected": "7/7",
+ "real_detect_rate": 1.0,
+ "benign_false_alarms": "0/0",
+ "verdict": "PASS",
+ "detail": [
+  {
+   "file": "access_control/parity_wallet_bug_1.sol",
+   "fact": "parity wallet 2017 ($31M + $150M frozen)",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is a multi-sig wallet with specific event handling and owner management. Let's examine it carefully.\n\nFirst, note that the contract uses Solidity 0.4.9, which is quite old. There might be issues with the `sha3` function not being available in older versions, but that's"
+  },
+  {
+   "file": "arithmetic/rubixi.sol",
+   "fact": "RubiXi pyramid scheme arithmetic",
+   "hit": true,
+   "answer": "The contract is vulnerable to an overflow attack due to the use of `uint` type for the balance and addition operation.\n\n**Vulnerability Class:** Arithmetic overflow vulnerability\n\n**Concrete Attack Path:**\n1. The contract uses `uint` for the balance, which cannot handle values larger than 2^32 - 1.\n2. An attacker can send a deposit that causes the "
+  },
+  {
+   "file": "reentrancy/0x3b0e2a34bb8c3e4e9ed6ba4618ab00fdec46f6f1.sol",
+   "fact": "real reentrancy-wallet exploit",
+   "hit": true,
+   "answer": "We need to audit the given Solidity contract for vulnerabilities. Let's analyze it step by step.\n\nFirst, note the pragma: ^0.4.25, which is an older version of Solidity. This might be a red flag for vulnerabilities that were fixed in later versions, but we need to check the actual code for vulnerabilities.\n\nThe contract has:\n- WALLET contract with "
+  },
+  {
+   "file": "denial_of_service/0x411a2619c22b0e4c6b6b4b9c9d8e1e3f2a5b7c9d.sol",
+   "fact": "DoS gas griefing",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is from Solidity 0.4.24, which is quite old. It has a `Refunder` contract with a `refundAddresses` array and `refunds` mapping. The `refundAll` function is clearly flawed.\n\nFirst, let's identify the vulnerability class. The code has an arbitrary length iteration over t"
+  },
+  {
+   "file": "front_running/0x6e4694d760467ba7cdffd1e6b678a3470e2c2b6a.sol",
+   "fact": "front-running escrow",
+   "hit": true,
+   "answer": "We need to analyze the Solidity contract for vulnerabilities. The contract is from the perspective of a senior smart-contract security auditor. We need to determine if it's safe or vulnerable, and if vulnerable, state the vulnerability class, concrete attack path, and fix.\n\nFirst, let's examine the code carefully.\n\n```solidity\npragma solidity ^0.4."
+  },
+  {
+   "file": "time_manipulation/0x372f58f880dd6d342d6fffe4228d5d1ffe3f9b6e.sol",
+   "fact": "timestamp roulette",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is \"EtherLotto\", which appears to be a lottery game where participants spend a fixed amount of ether to play, and then a random winner is selected. The contract has a potential vulnerability related to reentrancy or overflow/underflow, but more specifically, it looks l"
+  },
+  {
+   "file": "access_control/0x1b56eceba8e0b26fa2d0b1b2bbaec1c1e0b3a1d2.sol",
+   "fact": "access-control loss",
+   "hit": true,
+   "answer": "We need to analyze the given Solidity contract for vulnerabilities. The contract is a multi-sig wallet with specific event handling and state management. We need to check for vulnerabilities like reentrancy, overflow/underflow, improper state updates, etc.\n\nFirst, let's understand the contract structure:\n\n- WalletEvents: defines events and function"
+  }
+ ]
+}
