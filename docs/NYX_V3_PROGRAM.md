@@ -27,3 +27,31 @@ NO - and we never claim it. What we CAN claim: (a) machine-verified training on 
 tools (Slither/Echidna/Foundry) = the realistic top-1% auditor workflow. Publish limitation honestly.
 
 ### ORDER (5090 time, Genesis has pod): audit-breadth (highest value) -> office-hard -> chains -> forensics -> gauntlet v2.
+
+
+## NYX FAMILY TIER PLAN (LOCKED 2026-11-01, user directive: "lock it in, go ahead")
+Tiers, in build order. Every tier: base-measure FIRST (difficulty law), banks stay
+the same machine-verified data, LoRA single-delta, gates pre-registered before data.
+
+- TIER 0  Nyx Nano 1.7B (spark-x2.6 base) — current. Finish v3 program: audit-v2
+  (collecting) -> retrain -> gate -> office-hard -> office-chains -> forensics v3.
+- TIER 1  Nyx Core ~8B — base chosen by MEASUREMENT: dsr1-8b-normal vs qwen3-8b-normal
+  on our office/security/audit batteries (40-70% band preferred; whichever is in-band
+  and strongest). QLoRA r16, same banks, joint single-delta. Serves ~6-8GB 4-bit.
+- TIER 2  Nyx Cyber 30B — hidra-30b-cybersec: (a) evaluate raw on our batteries,
+  (b) if strong -> become THE teacher for all future security/forensics banks
+  (replacing qwen3coder-30b for security domains), (c) QLoRA-tune into Nyx format
+  only if measurement shows gain. 4-bit serve ~17-20GB on 5090.
+- TIER 3  Nyx Pro 27B — qwen3.8-27b (or dsr1-32b): QLoRA attempt on 5090 (tight:
+  4-bit + r16 + grad checkpointing + 1024 ctx). Go/no-go by Tier-1/2 results.
+  Uncensored twins (27b-abliterated, dsr1-32b-abliterated) = defensive DFIR tier
+  (malware triage / incident analysis where normal models refuse benign security work).
+- TIER 4  Genesis-family rebasing — whole ladder re-bases onto our own base model
+  when Genesis-v1 lands. glm-5.3-normal: teacher-only if ever needed (700GB, never local).
+
+RULES: 5090 = Nyx training/serving; RunPod = Genesis only. Big-model training beyond
+5090 capacity = joint decision with user (costs must be approved). Uncensored models
+used ONLY for defensive blue-team work, never red-team content (LAB_SECURITY_POLICY).
+
+IMMEDIATE SEQUENCE: audit-v2 bank fills -> joint retrain (3,350 rows) -> gate vs
+pre-registered bars -> THEN base-measure hidra-30b + dsr1-8b on batteries (Tier 1/2 data).
