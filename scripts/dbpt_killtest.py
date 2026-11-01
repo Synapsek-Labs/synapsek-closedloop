@@ -19,20 +19,27 @@ BAND_LO, BAND_HI = 0.40, 0.70
 
 # ---------------- data ----------------
 def get_text():
+    # wikitext-103-raw via HF parquet (S3 zip URL is dead); pyarrow is installed
     f = DATA_DIR / "wikitext103.txt"
-    if not f.exists() or f.stat().st_size < 50_000_000:
-        url = "https://wikitext.s3.amazonaws.com/repositories/wikitext-103-raw-v1.zip"
-        z = DATA_DIR / "wt.zip"
-        if not z.exists():
-            urllib.request.urlretrieve(url, z)
-        with zipfile.ZipFile(z) as zf:
-            for n in zf.namelist():
-                if n.endswith("wiki.test.raw"):
-                    with zf.open(n) as src, open(DATA_DIR / "val.txt", "wb") as dst:
-                        dst.write(src.read())
-                if n.endswith("wiki.train.raw"):
-                    with zf.open(n) as src, open(f, "wb") as dst:
-                        dst.write(src.read())
+    v = DATA_DIR / "val.txt"
+    if not (f.exists() and f.stat().st_size > 50_000_000):
+        import pyarrow.parquet as pq
+        parts = ["https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/wikitext-103-raw-v1/train-00000-of-00002.parquet",
+                 "https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/wikitext-103-raw-v1/train-00001-of-00002.parquet"]
+        with open(f, "w", encoding="utf-8") as out:
+            for u in parts:
+                lp = DATA_DIR / u.rsplit("/", 1)[-1]
+                if not lp.exists():
+                    urllib.request.urlretrieve(u, lp)
+                t = pq.read_table(lp).to_pydict()["text"]
+                out.write("\n".join(t))
+        tu = "https://huggingface.co/datasets/Salesforce/wikitext/resolve/main/wikitext-103-raw-v1/validation-00000-of-00001.parquet"
+        lp = DATA_DIR / tu.rsplit("/", 1)[-1]
+        if not lp.exists():
+            urllib.request.urlretrieve(tu, lp)
+        t = pq.read_table(lp).to_pydict()["text"]
+        with open(v, "w", encoding="utf-8") as out:
+            out.write("\n".join(t))
     return f.read_text(encoding="utf-8", errors="replace")
 
 def load_tokens(tok, text):
