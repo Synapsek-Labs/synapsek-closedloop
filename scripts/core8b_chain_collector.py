@@ -198,9 +198,8 @@ def solve(task, setup):
 def main():
     banked = 0
     seed = 0
-    log = open(NODE / "core8b_chain_log.txt", "a", encoding="utf-8")
     def p(s):
-        print(s, flush=True); log.write(s + "\n"); log.flush()
+        print(s, flush=True)  # bat redirect handles the log file (single handle)
     while banked < TARGET and seed < TARGET * 4:
         setup, task, verify = mk(seed)
         seed += 1
