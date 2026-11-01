@@ -109,3 +109,14 @@ specialist bundle. The bigger tiers are GENERALIST AGENT/ENGINEER models:
 BUILD ORDER: Core 8B data pipeline (open agentic/coding datasets, curated + verified)
 -> base measurements (coding/function-calling evals) -> QLoRA -> coding+agent gates ->
 Nyx Core 8B. Then Pro 27-30B. Then security verticals.
+
+
+## INVENTION QUEUE LOCK (2026-11-02, user-approved)
+- PAUSED: soup + janas kill-tests (both cloned on shinobi: tools_soup, tools_janas; register updated).
+  They now serve bets, not lead.
+- ACTIVE ORDER: (1) DBPT band-curriculum pretraining kill-test -> (2) EVDGT execution-verified
+  gating -> (3) TGRIT router warm-start (uses banked 3.4M traces) -> fold winners into Genesis
+  corpus recipe -> ATN-PT = Genesis 2.0 claim (trajectories-native from scratch).
+- PROTECTED (never paused): Core 8B chain collection (banking), Genesis S0b (pod), Nyx 1.7B serving,
+  watch daemon. Kill-tests run on spare 5090 capacity only; never evict serving/collection.
+- Full register: ~/synapsek-internal/research/GENESIS2_INVENTION_REGISTER.md (vault 1216f45).
