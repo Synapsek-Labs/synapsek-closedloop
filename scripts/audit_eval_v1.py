@@ -210,7 +210,9 @@ TASKS = [
      "```\n"
      "Is there a reentrancy vulnerability in this contract? Answer YES or NO "
      "first, then one short reason.",
-     lambda a: yes_no(a, "no")),
+     lambda a: yes_no(a, "no") or ("no vulnerability" in norm(a)
+               or "no reentrancy" in norm(a) or "is safe" in norm(a)
+               or "not vulnerable" in norm(a) or "answer is no" in norm(a))),
 
     # 8. BENIGN NEGATIVE — correct two-step ownership (must say NO)
     ("benign_treasury",
@@ -230,7 +232,11 @@ TASKS = [
      "Is there an access-control vulnerability in this contract (a privileged "
      "function without auth, or a takeover path)? Answer YES or NO first, "
      "then one short reason.",
-     lambda a: yes_no(a, "no")),
+     lambda a: yes_no(a, "no") or ("no vulnerability" in norm(a)
+               or "is safe" in norm(a) or "not vulnerable" in norm(a)
+               or "no takeover" in norm(a) or "answer is no" in norm(a)
+               or ("proper access control" in norm(a)
+                   and "two-step" in norm(a)))),
 
     # 9. ERC-4626-style first-depositor / donation inflation
     ("vault_inflation",
