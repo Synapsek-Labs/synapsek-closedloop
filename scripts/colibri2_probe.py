@@ -48,11 +48,15 @@ def main():
 
     def make_hook(layer_idx):
         def hook(mod, inp, out):
-            # out: [B, T, n_experts] router logits
+            # router logits, any rank: [B,T,E], [T,E], or tuple-wrapped
             with torch.no_grad():
-                ids = out[0].float().topk(topk, dim=-1).indices  # [T, topk]
-                for t in range(ids.shape[0]):
-                    for e in ids[t].tolist():
+                o = out[0] if isinstance(out, (tuple, list)) else out
+                if not torch.is_tensor(o) or o.dim() < 2 or o.shape[-1] != n_experts:
+                    return
+                flat = o.reshape(-1, o.shape[-1]).float()
+                ids = flat.topk(topk, dim=-1).indices.tolist()  # [N, topk]
+                for row in ids:
+                    for e in row:
                         ACT["_cur"][(layer_idx, e)] = ACT["_cur"].get((layer_idx, e), 0) + 1
         return hook
 
