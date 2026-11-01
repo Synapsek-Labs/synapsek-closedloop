@@ -31,7 +31,14 @@ PICKS = [
     ("access_control/0x1b56eceba8e0b26fa2d0b1b2bbaec1c1e0b3a1d2.sol", "access-control loss",
      ["owner", "modifier", "access", "unauthorized", "privileged"]),
 ]
-BENIGN_DIR = "not_vulnerable"
+# Benign: OpenZeppelin v2.5 (audited, industry-standard clean code)
+OZ_BASE = ("https://raw.githubusercontent.com/OpenZeppelin/openzeppelin-solidity/"
+           "release-v2.5.0/contracts/")
+OZ_FILES = ["token/ERC20/ERC20Detailed.sol" ,
+            "token/ERC721/ERC721.sol",
+            "access/Roles.sol",
+            "lifecycle/Pausable.sol",
+            "ownership/Ownable.sol"]
 
 def strip_header(src):
     # remove /* ... */ header block containing @source/@vulnerable_at_lines (leaks answer)
@@ -76,10 +83,18 @@ def main():
         vuln_res.append(hit)
         detail.append({"file": rel, "fact": fact, "hit": hit, "answer": a[:350]})
         print(f"[v2] {rel}: {'DETECTED' if hit else 'missed'}", flush=True)
-    bd = DS / BENIGN_DIR
-    if bd.exists():
-        for p in sorted(bd.glob("*.sol"))[:6]:
-            src = strip_header(p.read_text(encoding="utf-8", errors="replace"))[:7000]
+    oz = NODE / "oz_benign"
+    oz.mkdir(exist_ok=True)
+    import urllib.request
+    for rel in OZ_FILES:
+        fp = oz / rel.replace("/", "_")
+        if not fp.exists():
+            try:
+                urllib.request.urlretrieve(OZ_BASE + rel, fp)
+            except Exception as e:
+                print(f"[v2-oz] download fail {rel}: {e}", flush=True)
+    for fp in sorted(oz.glob("*.sol")):
+            src = strip_header(fp.read_text(encoding="utf-8", errors="replace"))[:7000]
             prompt = f"Audit this Solidity contract. Answer: vulnerable (class, attack path, fix) or safe.\n```solidity\n{src}\n```"
             try:
                 a = ask(prompt)
@@ -88,8 +103,8 @@ def main():
             cried = any(k in a.lower() for k in
                         ["vulnerable", "attack path", "exploitable"]) and "safe" not in a.lower()[:200]
             benign_res.append(cried)
-            detail.append({"file": f"benign/{p.name}", "false_alarm": cried, "answer": a[:350]})
-            print(f"[v2-benign] {p.name}: {'FALSE ALARM' if cried else 'clean'}", flush=True)
+            detail.append({"file": f"benign/{fp.name}", "false_alarm": cried, "answer": a[:350]})
+            print(f"[v2-benign] {fp.name}: {'FALSE ALARM' if cried else 'clean'}", flush=True)
 
     dv = sum(vuln_res); nv = len(vuln_res)
     fp = sum(benign_res); nb = len(benign_res)
