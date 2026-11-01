@@ -22,7 +22,12 @@ REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
 DATA = [NODE / "work_office.jsonl", NODE / "work_office_v2.jsonl",
         NODE / "work_sec21.jsonl", NODE / "work_sec22.jsonl",
-        NODE / "work_audit.jsonl"]
+        NODE / "work_audit.jsonl", NODE / "work_audit2.jsonl"]
+# joint-v3: 3,150+ rows (audit2 breadth bank 800 = pre-registered 5eb3fe0).
+# PRE-REGISTERED BARS for joint-v3 gate (frozen BEFORE training):
+#   audit_v2 (new 8-class battery) >= 0.70, audit_v1 >= 0.90 held,
+#   benign >= 0.80 held, sec v2.1 >= 0.683 held, office >= 0.50 held.
+# If work_audit2.jsonl is absent/empty the trainer will report it - never train blind.
 # joint-v2: 2,400 rows (audit bank 400 = vertical #3, pre-registered commit adce3d5).
 # PRE-REGISTERED BARS for joint-v2 gate (frozen BEFORE training runs):
 #   audit_v1_acc >= 0.75  (bot's battery bar), benign_neg_acc >= 0.80,
