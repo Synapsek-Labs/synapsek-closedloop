@@ -55,3 +55,24 @@ used ONLY for defensive blue-team work, never red-team content (LAB_SECURITY_POL
 
 IMMEDIATE SEQUENCE: audit-v2 bank fills -> joint retrain (3,350 rows) -> gate vs
 pre-registered bars -> THEN base-measure hidra-30b + dsr1-8b on batteries (Tier 1/2 data).
+
+
+## TOKEN DIET IMPLEMENTATION PLAN (LOCKED 2026-11-01)
+Pillar 4 product. Target: >=60% serving-token reduction at equal task success, MEASURED on
+our own Hebri trace workload (200M tok/days baseline). Gates pre-registered before build.
+
+- TD-0 (1d): token metering per turn/model/task-class in the gateway. Baseline = our own traces.
+- TD-1 (2-3d): state-file-not-replay: structured agent state + auto-compact at token budget.
+  Harness-level (we own Hebri). Gate: -50%+ prompt tokens on long sessions, zero task loss.
+- TD-2 (3-5d): VERIFIED CASCADE ROUTER: Nano 1.7B default; verify outputs with our checker
+  discipline; escalate to Pro 30B only on verify-fail or hard task classes. Gate: >=95% of
+  tokens on Nano, equal end-to-end task success vs Pro-only.
+- TD-3 (1-2d): deterministic tool-result compression filters. Gate: -40% tool tokens.
+- TD-4 (1d): vLLM speculative decoding (Nano drafts, Pro verifies). Gate: >=2x Pro throughput.
+- TOTAL GATE: cost/sub $28.7 -> <=$12 at equal success. Publish the measured table.
+
+Why defensible: routing is common; VERIFICATION-GUIDED cascades require the verified-battery
+discipline only our pipeline has. We are also our own best test bed (Hebri nodes = workload).
+
+Product lineup (LOCKED): 1) Hebri nodes (learn-by-doing infra) 2) NYX family (Nano/Core/Pro)
+3) Genesis (research bet) 4) Token Diet (serving-cost invention).
