@@ -88,3 +88,24 @@ OpenRouter per-token at scale -> funding via Genesis paper. Research (Colibri 2 
 feeding): kill-test FIRST per pre-flight gate, register in internal vault, never public
 until launch. Nyx Sec Node for Hebri: blue-box triage (deterministic tools + local Nyx
 models + benign-precision discipline + fix re-verification), blue-team product only.
+
+
+## TIER PLAN REVISION (2026-11-01 ~21:30 UTC, user directive — SUPERSEDES tier specialization)
+The 8B and 27B are NOT office+security+audit specialists. The 1.7B stays the only
+specialist bundle. The bigger tiers are GENERALIST AGENT/ENGINEER models:
+
+- TIER 0  Nyx Nano 1.7B (spark base): office + security + audit bundle. DONE (joint-v3).
+- TIER 1  Nyx Core 8B: GENERALIST - top agentic skills, tool use, coding for developers.
+  "A real engineer, top class." Base candidates: qwen3-8b-normal vs dsr1-8b-normal,
+  chosen by MEASUREMENT on coding + function-calling + tool-use evals (NOT our audit battery).
+  Data: open agentic/coding SFT mixes (function-calling corpora, code-instruct with
+  execution verification, agent trajectories; open-weight sources ONLY - ToS rule).
+  Our Hebri-verified tool trajectories count as agent-skill data (they are generic tool use).
+- TIER 2  Nyx Pro 27-30B: same recipe, bigger (best generic agent/engineer base by
+  measurement: qwen3.8-27b vs dsr1-32b).
+- TIER 3  CYBERSECURITY VERTICALS: applied AFTER 8B and 27B are complete - added on top
+  of the finished generalists with the same joint-bank method (audit/DFIR banks then).
+
+BUILD ORDER: Core 8B data pipeline (open agentic/coding datasets, curated + verified)
+-> base measurements (coding/function-calling evals) -> QLoRA -> coding+agent gates ->
+Nyx Core 8B. Then Pro 27-30B. Then security verticals.
