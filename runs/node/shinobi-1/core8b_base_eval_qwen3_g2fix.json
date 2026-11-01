@@ -1,0 +1,13 @@
+{
+ "qwen3-8b": {
+  "g1_fn_call": 1.0,
+  "g2_code": 0.9,
+  "composite": 0.95
+ },
+ "ts": "2026-11-02 01:15:47",
+ "bars": {
+  "trained_g1": 0.8,
+  "trained_g2": 0.7,
+  "band": "40-70% composite preferred for trainability"
+ }
+}
