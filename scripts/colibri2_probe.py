@@ -21,7 +21,10 @@ def load_bank_prompts(fname):
     rows = [json.loads(l) for l in open(NODE / fname, encoding="utf-8") if l.strip()]
     texts = []
     for r in rows:
-        t = r.get("prompt") or r.get("input") or r.get("question") or ""
+        t = ""
+        for m in r.get("messages", []):
+            if m.get("role") == "user":
+                t = m.get("content", ""); break
         if t and len(t) > 40:
             texts.append(t[:1200])
     random.seed(42)
