@@ -6,10 +6,14 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 NODE = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
+import os as _os
+_ONLY = _os.environ.get("CORE8B_ONLY", "")
 MODELS = {
     "qwen3-8b": r"C:\Users\User\hf_models\qwen3-8b-normal",
     "dsr1-8b": r"C:\Users\User\hf_models\dsr1-8b-normal",
 }
+if _ONLY:
+    MODELS = {k: v for k, v in MODELS.items() if k in _ONLY.split(",")}
 
 # ---------- G1: function calling (10 prompts) ----------
 TOOLS = [
@@ -145,13 +149,24 @@ def main():
                     "Available tools (JSON): " + json.dumps(tools) +
                     ". To call a tool, output a JSON object with fields name and arguments."})
             msgs.append({"role": "user", "content": prompt})
-            text = tok.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
+            kw = {}
+            try:
+                tok.apply_chat_template(msgs, tokenize=False,
+                                        add_generation_prompt=True, enable_thinking=False)
+                kw["enable_thinking"] = False
+            except TypeError:
+                pass
+            text = tok.apply_chat_template(msgs, tokenize=False,
+                                           add_generation_prompt=True, **kw)
             ids = tok(text, return_tensors="pt").to(model.device)
             with torch.no_grad():
                 o = model.generate(**ids, max_new_tokens=400, do_sample=temp > 0,
                                   temperature=temp, top_p=0.9,
                                   pad_token_id=tok.eos_token_id)
             out = tok.decode(o[0][ids["input_ids"].shape[1]:], skip_special_tokens=True)
+            out = re.sub(r"During[\s\S]*?During|During[\s\S]*$", "", out).strip()
+            if "" not in out and out.count("During") > 0:
+                out = "" 
             out = re.sub(r"<think>[\s\S]*?</think>", "", out).strip()
             return out
 
@@ -166,7 +181,7 @@ def main():
     results["ts"] = time.strftime("%Y-%m-%d %H:%M:%S")
     results["bars"] = {"trained_g1": 0.8, "trained_g2": 0.7,
                        "band": "40-70% composite preferred for trainability"}
-    (NODE / "core8b_base_eval.json").write_text(json.dumps(results, indent=1))
+    (NODE / "core8b_base_eval_qwen3_g2fix.json").write_text(json.dumps(results, indent=1))
     print(json.dumps(results, indent=1), flush=True)
 
 if __name__ == "__main__":
