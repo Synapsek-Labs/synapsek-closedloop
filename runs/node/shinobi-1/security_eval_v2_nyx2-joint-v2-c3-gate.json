@@ -1,0 +1,83 @@
+{
+  "model": "nyx2-joint-v2-c3-gate",
+  "security_v2_acc": 0.7333333333333333,
+  "n": 15,
+  "verdict": "TOO EASY (>0.70) -> raise difficulty",
+  "detail": {
+    "incident_chain": {
+      "pass": true,
+      "answer": "We need to reconstruct the attack chain from the three logs. The user wants the exact format: source-ip=<ip>; account=<account>; vector=<one word>; final-action=<what was executed>.\n\nLet's analyze the",
+      "secs": 21.0
+    },
+    "win_eventid": {
+      "pass": true,
+      "answer": "We need to analyze the Windows Event Log entries to understand what happened.\n\nEntry 1: 4625 - user=backup_svc src=10.1.1.50 (x14, 23:50-23:58)\nEntry 2: 4624 - user=backup_svc src=10.1.1.50 (23:58)\nEn",
+      "secs": 21.3
+    },
+    "config_ssh": {
+      "pass": true,
+      "answer": "We need to analyze the SSHD configuration and identify hardening recommendations. The current config:\n\nPort 22\nPermitRootLogin yes\nPasswordAuthentication yes\nPermitEmptyPasswords no\nX11Forwarding yes\n",
+      "secs": 21.0
+    },
+    "ioc_extract": {
+      "pass": false,
+      "answer": "We need answer only malicious IPs comma-separated in order of first appearance.\n\nFrom log:\n199.1.33.9 - GET /admin.php 403\n185.199.108.153 - GET /assets/logo.png 200\n199.1.33.9 - POST /login 200\n45.9.",
+      "secs": 7.2
+    },
+    "tamper_detect": {
+      "pass": true,
+      "answer": "We need answer only line identifier. Need analyze. We have chain hash = sha256(prev_line-hash + line). Given L1 aaa a, L2 bbb b, L3 ccc c mismatch expected ddd d, L4 eee e ok. Which line tampered/inse",
+      "secs": 21.1
+    },
+    "timeline_order": {
+      "pass": true,
+      "answer": "We need to list the events in chronological order based on the given times. The events are:\n\n(a) scheduled task 'cleanup' created 09:44\n(b) document.exe first seen in Downloads 09:12\n(c) outbound DNS ",
+      "secs": 4.2
+    },
+    "patch_priority": {
+      "pass": true,
+      "answer": "We need to prioritize patching based on risk. The user asks: \"Which do you patch FIRST? Answer with ONLY the CVE identifier (like 'CVE-2').\"\n\nWe have three systems:\n- CVE-1: internal office printer, C",
+      "secs": 15.6
+    },
+    "sudoers_audit": {
+      "pass": true,
+      "answer": "We need to audit the sudoers fragment and identify the worst privilege-escalation risk. The lines are:\n\n1. alice ALL=(root) /usr/bin/find\n2. bob ALL=(root) NOPASSWD: /usr/bin/vim\n3. carol ALL=(root) /",
+      "secs": 21.1
+    },
+    "exfil_channel": {
+      "pass": false,
+      "answer": "We are given an anomaly analysis of summarised DNS traffic. Normal traffic: 420 queries to *.cdn.example, avg label len 12. Suspicious traffic: 3,100 queries to ns1.data-drop.xyz, labels 60-80 chars, ",
+      "secs": 11.0
+    },
+    "ransomware_class": {
+      "pass": false,
+      "answer": "We are asked to classify this incident based on the given behavioral indicators. The incident involves a file server backup job that deleted shadow copies, thousands of files renamed with new extensio",
+      "secs": 5.1
+    },
+    "control_mapping": {
+      "pass": true,
+      "answer": "We need answer. Need audit mapping: shared generic accounts used for admin logins with no individual attribution. Which ISO 27001:2022 Annex A control (theme A.5 Organizational) is most directly faile",
+      "secs": 21.1
+    },
+    "hash_weak": {
+      "pass": true,
+      "answer": "We need to determine the primary recommendation for credential audit of an internal service where passwords are stored salted with SHA-256 and per-user salts. The question asks: \"What is the primary r",
+      "secs": 21.0
+    },
+    "persistence_win": {
+      "pass": true,
+      "answer": "We are asked: \"Persistence analysis: after compromise, reboot occurs and the suspicious process reappears. Registry shows a new value under HKLM\\...\\Run pointing to svchosts.exe in %APPDATA%. What per",
+      "secs": 7.1
+    },
+    "log_baseline": {
+      "pass": true,
+      "answer": "We are given: \"Detection engineering: mean login failures per IP per day = 2, std = 1.5. Today one IP shows 22 failures then a success. Using a 3-sigma threshold, is this an anomaly worth alerting? An",
+      "secs": 20.8
+    },
+    "scope_audit": {
+      "pass": false,
+      "answer": "We need to determine which systems are in scope for the investigation. The attacker used one phished credential on the VPN. The VPN allows access to 3 subnets. The credential was for user 'dave' (fina",
+      "secs": 21.2
+    }
+  }
+}

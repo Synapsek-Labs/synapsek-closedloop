@@ -1,0 +1,68 @@
+{
+  "model": "nyx2-joint-v2-c3-gate",
+  "security_v21_acc": 0.8333333333333334,
+  "n": 12,
+  "verdict": "TOO EASY (>0.70)",
+  "detail": {
+    "ioc_noise": {
+      "pass": false,
+      "answer": "We need to analyze the given web server log entries to determine which IPs are malicious. The log shows three IPs:\n\n1. 203.0.113.9 - GET /.git/config 404; GET /wp-login.php POST 200 (3x); UA=python-re",
+      "secs": 18.2
+    },
+    "pivot_chain": {
+      "pass": true,
+      "answer": "We need answer. Need reconstruct chain from logs. Need be careful. Format exactly: entry=<ip>; hop1=<ip>; hop2=<ip>; exfil=<ip>. Need identify sequence.\n\nLogs:\nfw.log: 10.0.0.5 -> 172.16.2.10:445 ALLO",
+      "secs": 11.3
+    },
+    "log_gap": {
+      "pass": false,
+      "answer": "We need answer forensic continuity check. Need parse. We have access.log last entry 03:41 normal traffic, next entry 04:19 resumes with POST /upload.php 200 from 45.9.148.66. auth.log 03:41-04:19 NO E",
+      "secs": 18.1
+    },
+    "persistence_combo": {
+      "pass": true,
+      "answer": "We need to rank the four findings by persistence strength for triage (strongest first). The findings are:\n\n1) HKCU Run key: 'OneDriveSync' -> C:\\Users\\build\\AppData\\Roaming\\svchosts.exe\n2) Scheduled t",
+      "secs": 14.9
+    },
+    "sigma_calc": {
+      "pass": true,
+      "answer": "We need answer only number one decimal plus sigma. Need compute sigma for internal host made 43 connections/min to external IP for 10 minutes. Baseline 15 connections/min per host, std 4. Need sigma l",
+      "secs": 18.2
+    },
+    "b64_triage": {
+      "pass": true,
+      "answer": "We need to determine the two things the analyst should do FIRST based on the scenario. The scenario: SOC triage, email gateway log shows an attachment whose decoded content is a suspicious launcher sc",
+      "secs": 7.3
+    },
+    "webshell_find": {
+      "pass": true,
+      "answer": "We are asked: \"Post-compromise web audit: which file is the likely webshell?\" with the given files. The answer should be only the file path.\n\nThe file that is most suspicious is /var/www/html/uploads/",
+      "secs": 2.7
+    },
+    "acl_audit": {
+      "pass": true,
+      "answer": "We need answer. Need parse. File server audit Windows. Shared folder \\\\FS01\\Finance has ACEs:\n- FinanceUsers: Modify (folder+subfolders, inherited)\n- Everyone: Read (root only, inherited)\n- DOMAIN\\dav",
+      "secs": 18.1
+    },
+    "beacon_cadence": {
+      "pass": true,
+      "answer": "We need answer. Need analyze. Outbound TLS from 10.0.0.33 to 45.61.19.9, 22 connections in 1 hour, inter-arrival times near-constant 160,178,164,159,181 seconds, small jitter, regardless of business h",
+      "secs": 9.4
+    },
+    "cert_audit": {
+      "pass": true,
+      "answer": "We need to identify three finding categories to fix in a TLS audit of a legacy payment gateway. The gateway supports TLS1.0, TLS1.1, TLS1.2; cipher list includes RC4-SHA and AES128-SHA; cert chain sig",
+      "secs": 5.2
+    },
+    "forensic_order": {
+      "pass": true,
+      "answer": "We need to determine the correct order to capture for a compromised laptop needed for court: memory encryption keys, disk, running processes. The order should prioritize the most critical and time-sen",
+      "secs": 12.4
+    },
+    "siem_corr": {
+      "pass": true,
+      "answer": "We need to correlate the alerts into one incident and identify noise.\n\nAlerts:\n1. 09:12 AV: doc.exe quarantined on host A\n2. 09:13 EDR: doc.exe dropped by winword.exe on host A\n3. 09:14 FW: host A -> ",
+      "secs": 10.2
+    }
+  }
+}
