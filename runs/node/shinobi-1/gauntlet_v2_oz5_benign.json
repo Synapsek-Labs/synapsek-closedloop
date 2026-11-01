@@ -1,0 +1,27 @@
+[
+ {
+  "file": "ERC20.sol",
+  "false_alarm": false,
+  "first200": "We need to analyze the given Solidity contract for vulnerabilities. The contract is an ERC20 implementation from OpenZeppelin, but with some modifications. Let's examine it carefully.\n\nThe contract is"
+ },
+ {
+  "file": "ERC4626.sol",
+  "false_alarm": false,
+  "first200": "We need to analyze the given Solidity contract for vulnerabilities. The contract is ERC4626, which is an extension of ERC20 for tokenized vaults. The contract has several important aspects: it uses a "
+ },
+ {
+  "file": "AccessControl.sol",
+  "false_alarm": false,
+  "first200": "The contract is the standard OpenZeppelin AccessControl contract, which is well-designed and secure by default. It properly implements role-based access control with admin roles, dynamic role manageme"
+ },
+ {
+  "file": "Ownable.sol",
+  "false_alarm": false,
+  "first200": "The contract is the standard OpenZeppelin Ownable contract, which is well-designed and secure. It properly implements the access control mechanism with the `onlyOwner` modifier and handles ownership t"
+ },
+ {
+  "file": "ERC721.sol",
+  "false_alarm": false,
+  "first200": "We need to analyze the given Solidity contract for vulnerabilities. The contract is an abstract ERC721 implementation with metadata extension. We need to check for common vulnerabilities like reentran"
+ }
+]
