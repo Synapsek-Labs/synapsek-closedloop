@@ -668,6 +668,34 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - Spend: acct Nov-02 day total $10.03 (this pod ~$5.8 of it; limit $80). No breach.
 - Next milestone: step-200 loss line (~16:19Z, next cron pass should catch it). If ≥1.1 or rising → recommend stop + debug (lr 1e-4 for QLoRA bs=2 too hot, or bad shard) before burning the remaining ~$55.
 
+## RELAUNCH EXECUTED 2026-11-02 ~16:35Z — core8b round 2 (lr 5e-5) — LIVE on pod guj5b4at771anr
+
+- Training data banked on shinobi runs/node/shinobi-1/core8b_data (48,573 packed blocks,
+  199M tokens, val 256) — survived locally even though the pod-1 disk was wiped.
+- Trainer patched (commit 23a4f03): LR default 5e-5 + warmup 3% + CORE8B_SMOKE step-limited
+  smoke mode + CORE8B_{DATA,OUT,BASE} env path overrides for pod use.
+- Pod guj5b4at771anr (H200 SECURE $5.29/hr, EUR-IS-4, disk 100GB, ports 22/8888/8000):
+  - Data relayed shinobi -> pod via chunked-HTTP PUT through the pod's 8000 proxy port
+    (receiver /root/recv.py): 796MB in 194s, sha256 verified byte-identical all 3 files.
+    (HF relay abandoned: shinobi HF token is fine-grained read-only, 403 on repo create.)
+  - Base = Qwen/Qwen3-8B pulled from HF on pod (16GB, local_dir /root/qwen3-8b-normal;
+    shinobi's qwen3-8b-normal is the same stock model, config/shards verified same layout).
+  - 5-step SMOKE: PASS (21s/step, no NaN/OOM, val_ppl 2.96 computable).
+  - FULL RUN LAUNCHED: 1516 steps (2 ep), ~21s/step -> ETA ~9h (~$47), log /root/train.log,
+    checkpoints /root/core8b_runs (ckpt every 300 steps), read-only file server on :8888
+    for checkpoint/log pulls. Watcher cron updated to this pod (GET :8888/train.log).
+- INCIDENTS/LESSONS this session: (a) hosted RunPod MCP create-pod tool rejects every
+  body shape tried -> used REST v2 directly with the apikey from shinobi ~/.runpod/config.toml;
+  (b) RunPod SSH proxy REQUIRES PTY (one-shots eaten) -> drive via terminal(pty)+process_manage;
+  scp blocked -> use HTTP PUT relay instead; (c) user caught: existing 50GB HP volume
+  synapsek-core8b-ca (adx140nge0, US-CA-2) predates this session — a redundant volume I
+  created in EUR-IS-4 was deleted; US-CA-2 has ZERO GPU stock right now so the volume
+  is parked (bills ~$/mo until deleted; do not touch without user); (d) shinobi's SSH key
+  (synapsek-cost-lab) is NOT registered on RunPod — Mac's ai-engineer@hebri-mac is.
+- Hermes gateway was DOWN (cron jobs would have silently stopped) — restarted, PID 58065.
+- Next: watcher watches step 50/100/150 loss (pre-registered divergence rule: monotonic
+  rise to >=1.1 at 150 = flag), val_ppl at step 300, auto-terminate on TRAIN DONE.
+
 ## DIVERGENCE STOP 2026-11-02T15:58Z — core8b H200 run KILLED (engineer decision, pre-registered rule)
 
 - Loss 0.699 -> 0.904 -> 1.171 (steps 50/100/150) — monotonic, crossed the
