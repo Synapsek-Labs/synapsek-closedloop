@@ -13,7 +13,7 @@ DATA = NODE / "core8b_data"
 OUT = NODE / "core8b_runs"
 OUT.mkdir(exist_ok=True)
 BASE = Path(r"C:\Users\User\hf_models") / "qwen3-8b-normal"
-SEQ, BS, ACC = 4096, 4, 8
+SEQ, BS, ACC = 4096, 1, 32
 EPOCHS = 2
 LR = 1e-4
 DEV = "cuda"
@@ -65,9 +65,16 @@ for ep in range(EPOCHS):
         for m in range(ACC):
             micro = np.stack([train[j] for j in idx[m*BS:(m+1)*BS]])
             x = torch.from_numpy(micro.astype(np.int64)).to(DEV)
-            lg = model(x).logits[:, :-1].float()
-            loss = torch.nn.functional.cross_entropy(
-                lg.reshape(-1, lg.shape[-1]), x[:, 1:].reshape(-1))
+            lg = model(x).logits[:, :-1]
+            y = x[:, 1:]
+            V = lg.shape[-1]
+            tot = 0.0
+            for ci in range(0, lg.shape[1], 1024):
+                ce = torch.nn.functional.cross_entropy(
+                    lg[:, ci:ci+1024].float().reshape(-1, V),
+                    y[:, ci:ci+1024].reshape(-1), reduction="sum")
+                tot = tot + ce
+            loss = tot / y.numel()
             (loss / ACC).backward()
         torch.nn.utils.clip_grad_norm_([q for q in model.parameters() if q.requires_grad], 1.0)
         optim.step(); sched.step(); optim.zero_grad(set_to_none=True)
