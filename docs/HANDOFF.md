@@ -667,3 +667,19 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - Loss trend unchanged: 0.699 → 0.904 → 1.171 (steps 50/100/150) — divergence flag stands.
 - Spend: acct Nov-02 day total $10.03 (this pod ~$5.8 of it; limit $80). No breach.
 - Next milestone: step-200 loss line (~16:19Z, next cron pass should catch it). If ≥1.1 or rising → recommend stop + debug (lr 1e-4 for QLoRA bs=2 too hot, or bad shard) before burning the remaining ~$55.
+
+## DIVERGENCE STOP 2026-11-02T15:58Z — core8b H200 run KILLED (engineer decision, pre-registered rule)
+
+- Loss 0.699 -> 0.904 -> 1.171 (steps 50/100/150) — monotonic, crossed the
+  >=1.1 kill threshold at step 150, one checkpoint before the scheduled
+  step-200 decision. Stopped per rule intent, saving ~$50 of remaining budget.
+- Pod xddp9sw3sjm0es stopped then TERMINATED (cost $5.29 total; no artifacts
+  kept — run garbage; recipe + data prep fully in-repo).
+- Suspected causes to debug BEFORE relaunch: (1) lr 1e-4 too hot for
+  QLoRA bs=2 on 8B (replay-anchored Nyx recipe validated at 5e-5 on 1.5B —
+  reuse 5e-5 or lower, never 1e-4); (2) possible bad data shard — verify
+  shard loss individually before full run; (3) confirm replay pairs included
+  (missing replay anchor = the pre-v2 failure mode, loss rise consistent with
+  forgetting).
+- RELAUNCH PLAN (registered): lr 5e-5, warmup 3%, bs per validated recipe,
+  5-step smoke on one shard checking loss falls, THEN full run.
