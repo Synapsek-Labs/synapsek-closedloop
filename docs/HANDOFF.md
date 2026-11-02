@@ -654,3 +654,10 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - GPU: 119909 MiB used, util 100% (dashboard 99%). No OOM/traceback.
 - Spend rate ~$3.96/hr (H200 secure) → ~16h ETA for ep1+ep2 ≈ $60-65 total est.
 - Next: watch step-150/200 loss; if loss still rising at step 200, flag divergence to engineer.
+
+## CRON WATCH PASS 2026-11-02T15:50Z — Core 8B training alive, LOSS DIVERGING (flag)
+- Pod xddp9sw3sjm0es (H200) RUNNING, GPU 119.9 GiB / 100% util, no OOM. Spend $5.29 (limit $80); acct Nov-02 day total $9.15.
+- ep1 step 150/1516 (tok 39M/199M), lr 9.84e-05, log fresh & progressing (step 100→150 since last pass).
+- **Loss 0.699 → 0.904 → 1.171 across steps 50/100/150 — monotonic rise, divergence flag per pre-registered watch rule.**
+- Caveat: 5899s cumulative train time ≈ step-150 logged ~14:46Z; but step count advanced and GPU is busy — trainer is running, not hung.
+- Next: check step-200/250 loss. If still ≥1.1 or rising, recommend stopping run (kill before ep1 completes, ~$4/hr burn) and debugging data/lr; do NOT let it run 16h to a garbage adapter.
