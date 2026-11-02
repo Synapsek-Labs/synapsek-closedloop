@@ -1,0 +1,45 @@
+{
+  "tag": "dead-group-census-1.7B-proxy",
+  "ts": "2026-11-03T00:21:41.941635",
+  "pre_registered_gate": "all-fail group fraction >= 15% => dead-group repair RL has surface",
+  "method": "per-class pass rates from 1.7B joint-v3 gate runs (shinobi batteries), groups = task classes/kinds",
+  "results": {
+    "security_v21": {
+      "classes": 12,
+      "all_fail": [
+        "ioc_noise"
+      ],
+      "note": "1 run"
+    },
+    "office_v2": {
+      "classes": 22,
+      "runs": 3,
+      "all_fail": [
+        "sum",
+        "count",
+        "avg",
+        "max",
+        "v2_14"
+      ],
+      "note": "consistent zero across 3 runs - matches office-hard collector queue target"
+    },
+    "audit_v2": {
+      "kinds": 8,
+      "samples_per_kind": 14,
+      "all_fail": [
+        4
+      ],
+      "partial": {
+        "7": "5/14"
+      }
+    }
+  },
+  "combined": {
+    "groups": 42,
+    "all_fail": 7,
+    "fraction": 0.167
+  },
+  "verdict": "PASS_GATE_SURFACE_EXISTS",
+  "implication": "dead-group repair RL (RL-layer survivor #3) clears its pre-build gate; next step = teacher-repair continuation experiment",
+  "caveats": "proxy measurement on audit/office/security batteries, not GRPO rollouts; 42 groups is small; confirm on 8B post-SFT with real GRPO groups"
+}
