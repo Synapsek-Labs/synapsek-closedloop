@@ -586,6 +586,16 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - NEXT: build the hard-agent data pipeline (Hebri trajectories + open agentic corpora,
   curated HARD), then QLoRA qwen3-8b, then gates.
 
+## STATE 2026-11-02T06:00Z — GENESIS S0b pod wedge incident (cron monitor)
+- Pod synapsek-cost-lab container died silently between 05:26Z-05:43Z (API said RUNNING, SSH
+  proxy "container not found", zero pod logs). Restart + stop/start both failed to place a
+  container. Monitor STOPPED the pod (~05:55Z) to halt $0.59/hr billing. S0b 200-sample gate
+  lost mid-run at 100/200 verified=41 (~41% vs bar 0.95 — FAIL trajectory). Calibration bank
+  (1200 rows) + adapter SAFE in vault (commit c6936b3, md5 verified). Pod disk presumed wiped
+  (no network volume). ENGINEER DECISION: re-run gate after pod recovery vs presumptive-FAIL
+  -> EVDGT (pre-registration needs a completed gate for the null). Full detail + wake-up at
+  the top of the vault GENESIS_LEDGER.md. NYX unaffected (fully local, joint-v3 :8001).
+
 ## STATE SNAPSHOT 2026-11-02 ~03:30 UTC (post-invention-queue-lock)
 - NYX 1.7B (nyx-2-joint-v3): SHIPPED :8001, all bars, gauntlet-proven (v1 7/8, v2 6-7/7 real exploits, 0/10 FP). DONE.
 - CORE 8B: base=qwen3-8b (G1 10/10, G2 18/20). Chain collection PAUSED (30B teacher too slow; needs faster design - janas kill-test informs). Data spec ready.
@@ -594,4 +604,14 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - INVENTION QUEUE LOCKED: soup+janas kill-tests PAUSED (cloned on shinobi). Order: DBPT(closing FAIL) -> EVDGT -> TGRIT -> fold winners -> ATN-PT. Register: vault research/GENESIS2_INVENTION_REGISTER.md.
 - Watch daemon: FIXED (pod()->ssh_run bug), pid 96392, vault pulls verified every ~20min, snapshot fresh.
 - Pod dashboard "initializing/no GPU" = RunPod UI display bug; SSH-verified alive repeatedly.
+## STATE 2026-11-02T07:50Z — cron dual-track pass (ops incidents, no science change)
+- :8001 spark_server brief outage ~07:28Z: killed PID 21464 as "stale duplicate" — it is the
+  spark-venv LAUNCHER; the uvpy child holds the port but dies with the parent. Restored via
+  `schtasks /run /tn spark-server`, PID cmdline = hf_models/nyx-2-joint-v3 :8001 + live completion OK.
+  LESSON: spark-venv spark_server PID = launcher, never kill it while its child serves.
+- Vault incident (private repo): the watch daemon overwrote genesis_artifacts/distill_calibration.jsonl
+  with ssh error text after the pod stopped; restored verified 1200-row bank (md5 9193c5fe), daemon
+  hardened (container-down detection + shrink/jsonl guard) and restarted — commits 7633476, a7c5d50.
+- Pod synapsek-cost-lab still EXITED (no billing). S0b gate remains lost at 100/200 v41 — engineer
+  decision (re-run vs presumptive-FAIL -> EVDGT) still pending. shinobi local dev idle, no errors.
 - DELIVERY LADDER (per monetization plan, awaiting launch word): 1) publish Nyx 1.7B (HF+GGUF+NyxBench, $0) 2) Nyx Audit pre-scan ($99-499) 3) capped subs 4) OpenRouter provider 5) bounty lab.
