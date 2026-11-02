@@ -123,7 +123,7 @@ def run_arm(tag, use_band, ids, val_ids, vocab):
                                     y.reshape(-1), reduction="none")
         if use_band:
             with torch.no_grad():
-                q = torch.quantile(tok_loss.detach(), torch.tensor([BAND_LO, BAND_HI]))
+                q = torch.quantile(tok_loss.detach(), torch.tensor([BAND_LO, BAND_HI], device=tok_loss.device))
                 mask = ((tok_loss.detach() >= q[0]) & (tok_loss.detach() <= q[1])).float()
                 denom = mask.sum().clamp(min=1.0)
             loss = (tok_loss * mask).sum() / denom
