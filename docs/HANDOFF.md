@@ -622,3 +622,14 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - **FOCUS:** NYX family + Hebri nodes finalization, 5090 ONLY. No RunPod spend.
 - **CORE 8B BAR:** must EXCEED the top open 8B models (not compete) — benchmark-first plan.
 - Pod status: EXITED (no A40 capacity). Watch daemon down. Do NOT claim pod health without API+SSH+capacity verification.
+
+## CRON DUAL-TRACK PASS 2026-11-02T08:32Z — cost-lab pod TERMINATED (restart-loop billing incident)
+- Track 1 (sec22): milestone long complete; genesis-phase0 pod confirmed gone (SSH refused). No action.
+- Track 2 local (shinobi): genesis_local_log.txt last entry 2026-10-31 23:59 "bring-up done" — idle, no errors.
+- INCIDENT: synapsek-cost-lab (ag8ow681e280i1) was restarted by an unknown actor into a dead container at
+  07:54Z (stopped by the 08:00Z monitor pass) and AGAIN at 08:02Z — each time API said RUNNING ($0.59/hr)
+  but SSH said "container not found". Stop provably doesn't hold; no mutable auto-restart setting. This
+  pass TERMINATED the pod at ~08:32Z — all irreplaceable artifacts (S0b calib bank + adapter) verified in
+  vault first (commit c6936b3). Post-terminate pod list EMPTY: zero RunPod spend, consistent with the
+  2026-11-02 no-spend directive lock. Full detail at top of vault GENESIS_LEDGER.md.
+  ENGINEER: the restart source (RunPod retry vs remote actor) is unidentified — if pod reappears, investigate.
