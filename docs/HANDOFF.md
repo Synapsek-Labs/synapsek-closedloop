@@ -681,9 +681,11 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
   - Base = Qwen/Qwen3-8B pulled from HF on pod (16GB, local_dir /root/qwen3-8b-normal;
     shinobi's qwen3-8b-normal is the same stock model, config/shards verified same layout).
   - 5-step SMOKE: PASS (21s/step, no NaN/OOM, val_ppl 2.96 computable).
-  - FULL RUN LAUNCHED: 1516 steps (2 ep), ~21s/step -> ETA ~9h (~$47), log /root/train.log,
-    checkpoints /root/core8b_runs (ckpt every 300 steps), read-only file server on :8888
-    for checkpoint/log pulls. Watcher cron updated to this pod (GET :8888/train.log).
+  - FULL RUN LIVE: 3034 steps (2 ep), TRUE RATE 20.5s/step (step-50 line: loss 1.290, lr 2.75e-05
+  mid-warmup) -> ETA ~17.3h -> done ~09:55Z Nov 3, est $91 total (slightly over the $80 flag —
+  noted for the user). Log /root/train.log, ckpts /root/core8b_runs every 300 steps,
+  file server :8888 for pulls. Watcher cron repointed to this pod (GET :8888/train.log).
+  Divergence watch: step 100/150 must NOT rise monotonically to >=1.1 (lr-1e-4 failure mode).
 - INCIDENTS/LESSONS this session: (a) hosted RunPod MCP create-pod tool rejects every
   body shape tried -> used REST v2 directly with the apikey from shinobi ~/.runpod/config.toml;
   (b) RunPod SSH proxy REQUIRES PTY (one-shots eaten) -> drive via terminal(pty)+process_manage;
