@@ -615,3 +615,10 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - Pod synapsek-cost-lab still EXITED (no billing). S0b gate remains lost at 100/200 v41 — engineer
   decision (re-run vs presumptive-FAIL -> EVDGT) still pending. shinobi local dev idle, no errors.
 - DELIVERY LADDER (per monetization plan, awaiting launch word): 1) publish Nyx 1.7B (HF+GGUF+NyxBench, $0) 2) Nyx Audit pre-scan ($99-499) 3) capped subs 4) OpenRouter provider 5) bounty lab.
+
+
+## DIRECTIVE LOCK 2026-11-02 (~08:30 UTC) — PIVOT TO ORIGINAL PLAN
+- **PAUSED:** Genesis (S0b calib bank 1200 rows SAFE in vault; adapter+gate to re-run when A40 capacity returns — persistent network volume on next deploy) + EVDGT + TGRIT + invention queue.
+- **FOCUS:** NYX family + Hebri nodes finalization, 5090 ONLY. No RunPod spend.
+- **CORE 8B BAR:** must EXCEED the top open 8B models (not compete) — benchmark-first plan.
+- Pod status: EXITED (no A40 capacity). Watch daemon down. Do NOT claim pod health without API+SSH+capacity verification.
