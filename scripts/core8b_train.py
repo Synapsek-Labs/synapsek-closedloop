@@ -9,20 +9,29 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfi
 from peft import LoraConfig, get_peft_model
 
 NODE = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
-DATA = NODE / "core8b_data"
-OUT = NODE / "core8b_runs"
-OUT.mkdir(exist_ok=True)
-BASE = Path(r"C:\Users\User\hf_models") / "qwen3-8b-normal"
+DATA = Path(os.environ.get("CORE8B_DATA", str(NODE / "core8b_data")))
+OUT = Path(os.environ.get("CORE8B_OUT", str(NODE / "core8b_runs")))
+OUT.mkdir(parents=True, exist_ok=True)
+BASE = Path(os.environ.get("CORE8B_BASE",
+          str(Path(r"C:\Users\User\hf_models") / "qwen3-8b-normal")))
 SEQ, BS, ACC = 4096, 1, 32
 EPOCHS = 2
-LR = 1e-4
+# RELAUNCH 2026-11-02 (registered in 655299b after divergence kill): lr 5e-5
+# (1e-4 diverged: 0.699->0.904->1.171 @ steps 50/100/150), warmup 3%.
+LR = float(os.environ.get("CORE8B_LR", "5e-5"))
+WARMUP = float(os.environ.get("CORE8B_WARMUP", "0.03"))
+SMOKE = int(os.environ.get("CORE8B_SMOKE", "0"))  # >0 = run only N steps, print each
 DEV = "cuda"
 
 train = np.load(DATA / "train_blocks.npy", mmap_mode="r")
 val = np.load(DATA / "val_blocks.npy", mmap_mode="r")
 N = train.shape[0]
 steps_per_epoch = N // (BS * ACC)
-print(f"blocks={N} steps/epoch={steps_per_epoch}", flush=True)
+if SMOKE:
+    EPOCHS = 1
+    steps_per_epoch = SMOKE
+print(f"blocks={N} steps/epoch={steps_per_epoch} lr={LR} warmup={WARMUP} "
+      f"smoke={SMOKE}", flush=True)
 
 bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                          bnb_4bit_compute_dtype=torch.bfloat16,
@@ -42,7 +51,7 @@ p = model.parameters()
 optim = torch.optim.AdamW([q for q in p if q.requires_grad], lr=LR,
                            weight_decay=0.01, betas=(0.9, 0.95))
 total = steps_per_epoch * EPOCHS
-sched = get_cosine_schedule_with_warmup(optim, int(0.02 * total), total)
+sched = get_cosine_schedule_with_warmup(optim, int(WARMUP * total), total)
 
 def val_ppl(model, n=64):
     model.eval(); tot = 0.0; cnt = 0
@@ -79,7 +88,7 @@ for ep in range(EPOCHS):
         torch.nn.utils.clip_grad_norm_([q for q in model.parameters() if q.requires_grad], 1.0)
         optim.step(); sched.step(); optim.zero_grad(set_to_none=True)
         step += 1
-        if step % 50 == 0:
+        if step % 50 == 0 or SMOKE:
             el = time.time() - t0
             tok = step * BS * ACC * SEQ
             print(f"[c8b] ep{ep+1} step {step}/{total} tok={tok/1e6:.0f}M "
@@ -92,7 +101,7 @@ for ep in range(EPOCHS):
             model.save_pretrained(str(OUT / f"ckpt_step{step}"), safe_serialization=True)
 
 final_ppl = val_ppl(model)
-model.save_pretrained(str(OUT / "nyx-core-8b-sft"), safe_serialization=True)
+model.save_pretrained(str(OUT / ("smoke_adapter" if SMOKE else "nyx-core-8b-sft")), safe_serialization=True)
 res = {"final_val_ppl": final_ppl, "steps": step, "tokens_B": step*BS*ACC*SEQ/1e9, "hist": hist}
 (OUT / "core8b_train_result.json").write_text(json.dumps(res, indent=1))
 print("TRAIN DONE", json.dumps({k: res[k] for k in ("final_val_ppl","steps","tokens_B")}), flush=True)
