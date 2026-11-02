@@ -661,3 +661,9 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - **Loss 0.699 → 0.904 → 1.171 across steps 50/100/150 — monotonic rise, divergence flag per pre-registered watch rule.**
 - Caveat: 5899s cumulative train time ≈ step-150 logged ~14:46Z; but step count advanced and GPU is busy — trainer is running, not hung.
 - Next: check step-200/250 loss. If still ≥1.1 or rising, recommend stopping run (kill before ep1 completes, ~$4/hr burn) and debugging data/lr; do NOT let it run 16h to a garbage adapter.
+
+## CRON WATCH PASS 2026-11-02T15:55Z — unchanged since 15:50Z; divergence decision pending step 200
+- Pod xddp9sw3sjm0es (H200) RUNNING, GPU 119.9 GiB / 100% util, no OOM. Log last line still step 150 (expected: ~33 min/step, only 5 min elapsed since 15:50Z pass).
+- Loss trend unchanged: 0.699 → 0.904 → 1.171 (steps 50/100/150) — divergence flag stands.
+- Spend: acct Nov-02 day total $10.03 (this pod ~$5.8 of it; limit $80). No breach.
+- Next milestone: step-200 loss line (~16:19Z, next cron pass should catch it). If ≥1.1 or rising → recommend stop + debug (lr 1e-4 for QLoRA bs=2 too hot, or bad shard) before burning the remaining ~$55.
