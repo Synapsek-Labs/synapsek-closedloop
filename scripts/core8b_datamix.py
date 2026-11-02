@@ -20,7 +20,7 @@ SOURCES = [
     (str(DS / "nemotron_agentic_v1" / "data" / "tool_calling.jsonl"), 0.15),
     (str(DS / "nemotron_agentic_v1" / "data" / "interactive_agent.jsonl"), 0.05),
 ]
-tok = AutoTokenizer.from_pretrained(str(Path(r"C:\Users\User\hf_models") / "qwen3-8b"))
+tok = AutoTokenizer.from_pretrained(str(Path(r"C:\Users\User\hf_models") / "qwen3-8b-normal"))
 print("vocab ok", flush=True)
 
 rng = random.Random(20261102)
