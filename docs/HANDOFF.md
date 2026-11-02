@@ -633,3 +633,16 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
   vault first (commit c6936b3). Post-terminate pod list EMPTY: zero RunPod spend, consistent with the
   2026-11-02 no-spend directive lock. Full detail at top of vault GENESIS_LEDGER.md.
   ENGINEER: the restart source (RunPod retry vs remote actor) is unidentified — if pod reappears, investigate.
+
+## CRON DUAL-TRACK PASS 2026-11-02T12:07Z — :8001 outage restored (two-layer cause)
+- RunPod pod list EMPTY (zero spend). Track 2 local dev idle since 10-31, no errors.
+- INCIDENT: nyx-2-joint-v3 on shinobi :8001 was DOWN (schtask spark-server "Ready", no
+  listener). Restored via `schtasks /run /tn spark-server`, PID cmdline verified
+  (hf_models/nyx-2-joint-v3 :8001), live completion OK (17*23=391).
+- Root cause 2 (Mac unreachable even after restore): shinobi Wi-Fi = PUBLIC profile and
+  Windows auto-created inbound BLOCK rules ("TCP/UDP Query User{...}") for the exact uvpy
+  cpython-3.12 python.exe; block overrides allow. Fixed: disabled the 4 auto blocks, added
+  Allow rule "Spark Server 8001" (TCP/8001, Any profile). Mac curl now 200 + completion OK.
+- LESSON: verify serving from the CONSUMER side (Mac), not localhost — localhost worked while
+  Mac was firewalled. Future "Mac can't reach shinobi model port" → check Public profile +
+  python.exe auto block rules first.
