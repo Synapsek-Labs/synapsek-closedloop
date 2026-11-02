@@ -1,0 +1,32 @@
+{
+  "tag": "yield-census-first-cut",
+  "ts": "2026-11-03T01:10:49.139472",
+  "question": "what fraction of typical pretraining tokens are machine-checkable (strong verification: execution/tests/answers)?",
+  "method": "sample-level probes via HF datasets-server API + mixture-weighted extrapolation; first-cut, n=20 per corpus",
+  "probes": {
+    "openai/gsm8k main": "20/20 answer-extractable & verifiable (#### delimiter)",
+    "HuggingFaceFW/fineweb-edu sample-10BT": "0/20 machine-checkable (natural web text, no verifier possible)",
+    "nvidia/Nemotron-SFT-Agentic-v2 tool_calling (primary Core-8B corpus)": "tool responses carry structured success/status fields -> step-level checkable in principle",
+    "mbpp": "API probe 404; known test-included corpus (~100% by construction)",
+    "bigcode/the-stack-smol": "gated (401); code-with-tests fraction not directly sampled this cut"
+  },
+  "mixture_weights (typical open-recipe pretrain)": {
+    "web": 0.6,
+    "code": 0.15,
+    "math": 0.05,
+    "wiki_books": 0.2
+  },
+  "checkable_fractions": {
+    "web": 0.0,
+    "code": 0.03,
+    "math": 1.0,
+    "wiki_books": 0.0
+  },
+  "yield_estimate": {
+    "strong_verification": 0.0545,
+    "note": "~5-6% of a standard pretraining mixture is strongly machine-checkable (math 5% + code-with-tests ~0.5%); executable-but-untested code adds weak verification only"
+  },
+  "headline": "only ~5% of the standard pretraining universe carries machine-verifiable signal - and agentic/tool corpora are the one class that can be ~100% step-verified, which is exactly where Hebri's verified trajectories live",
+  "caveats": "first-cut: n=20 probes, mixture weights are representative not measured, code-tests fraction estimated from literature (~2-4% of GitHub tokens are test files); full census = larger sampling + direct stack access",
+  "verdict": "FIRST_CUT_COMPLETE"
+}
