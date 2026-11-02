@@ -646,3 +646,11 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - LESSON: verify serving from the CONSUMER side (Mac), not localhost — localhost worked while
   Mac was firewalled. Future "Mac can't reach shinobi model port" → check Public profile +
   python.exe auto block rules first.
+
+## CRON WATCH PASS 2026-11-02T15:37Z — Core 8B H200 training healthy
+- Pod xddp9sw3sjm0es (synapsek-core8b-train, H200) RUNNING, uptime 9260s, cost $5.29 (limit $80).
+- ep1 step 100/1516 (tok 26M/199M), loss 0.904 (up from 0.699 @step50 — early-epoch drift, watch next line),
+  lr 9.95e-05, train pid 2021 alive (102% CPU), log fresh (mtime 15:12:34Z vs now 15:36:50Z, gap 24 min < 90).
+- GPU: 119909 MiB used, util 100% (dashboard 99%). No OOM/traceback.
+- Spend rate ~$3.96/hr (H200 secure) → ~16h ETA for ep1+ep2 ≈ $60-65 total est.
+- Next: watch step-150/200 loss; if loss still rising at step 200, flag divergence to engineer.
