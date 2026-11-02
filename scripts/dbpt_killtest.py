@@ -107,7 +107,7 @@ def run_arm(tag, use_band, ids, val_ids, vocab):
             for i in range(0, min(val_ids.numel() - SEQ - 1, SEQ*40), SEQ):
                 x = val_ids[i:i+SEQ].unsqueeze(0).to(DEV)
                 y = val_ids[i+1:i+SEQ+1].unsqueeze(0).to(DEV)
-                lg = m(x.to(torch.bfloat16))
+                lg = m(x)
                 tot += F.cross_entropy(lg.float().view(-1, lg.shape[-1]), y.reshape(-1),
                                         reduction="sum").item()
                 cnt += y.numel()
