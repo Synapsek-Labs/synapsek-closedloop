@@ -10,3 +10,15 @@ All research state, pre-registrations and internal plans now live in the Synapse
 - bandsamp chain (shinobi) at 848/1000 rows, healthy — no action.
 - Next watch: ep2 val lines; on completion -> gate on pod, stop-not-
   terminate, backup before any mutation.
+
+## STALL FLAG CLEARED (engineer live check, 2026-11-03T03:40Z)
+- bandsamp chain is NOT stalled: bandsamp_A_s3 server (PID 26672/26992
+  launcher+child) spawned 13:30:45 on :8005, LISTENING, and serving live
+  completions (~44 tok/s, tool_calls in flight) per bandsamp_srv_A_s3.txt.
+  Eval-log silence = battery runtime (appends on completion only).
+- WATCHER RULE REFINEMENT (registered): for the bandsamp chain, the
+  aliveness signal is bandsamp_srv_<seed>.txt traffic (or :8005 request
+  activity), NOT the eval log mtime or GPU util. GPU is ~1% during
+  tool-exec phases by design (CPU-bound on a loaded machine).
+- v2 battery partials (context, verdict pending chain completion):
+  mkdir PASS, append PASS; sort/count/avg/max FAIL so far (seeds pending).
