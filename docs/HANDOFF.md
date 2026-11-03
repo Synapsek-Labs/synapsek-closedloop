@@ -95,3 +95,15 @@ checkpoints live on the retained 100GB disk.
   teammate messaged to claim it; user asked to confirm.
 - Watcher rule: any unnamed template pod on the account = flag + verify
   GPU idle -> stop, never terminate before owner identifies.
+
+## CROCODILE POD OWNERSHIP RESOLVED 2026-11-04 (~06:45Z)
+- audit-and-security-engineer replied: pod was NOT theirs (all audit work
+  on shinobi; no RunPod usage). Their verdict: stop stands, mark as
+  termination candidate; if they ever need rented GPUs they'd rent fresh.
+- Owner remains unidentified (likely a leftover from a compacted session).
+- STATUS: stopped (zero GPU cost), termination candidate at next cleanup.
+  NOTE before terminating: pod carries global volume cmw061hxozckzg at
+  /workspace (200GB disk) — list volumes + check contents/size before
+  deleting anything, volume may bill separately (~$0.07/GB/mo standard).
+- Related (teammate status): Nyx-Audit deliverable #1 done (eval battery,
+  base 0.50 in band); they await go on deliverable #2 (audit_collector_v1).
