@@ -85,3 +85,13 @@ checkpoints live on the retained 100GB disk.
       (adds ~10 min/val, removes this failure mode permanently).
   Engineer recommends (c) when the 8B model is next scheduled, and
   registry-grade export discipline in the runbook from now on.
+
+## OPS 2026-11-04 ~06:20Z — stray pod actual_teal_crocodile STOPPED
+- Pod aqwujpa1roa2md (A40, $0.59/hr, created Nov-3 04:06Z, template-based,
+  GLOBAL VOLUME at /workspace) was running IDLE (GPU 0%/0%).
+- STOPPED (EXITED) per the cost rule — volume-backed, data survives;
+  restarts cleanly. Not terminated pending identification.
+- Owner unknown (created during a compacted context window). Audit
+  teammate messaged to claim it; user asked to confirm.
+- Watcher rule: any unnamed template pod on the account = flag + verify
+  GPU idle -> stop, never terminate before owner identifies.
