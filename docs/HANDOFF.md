@@ -713,3 +713,17 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
   forgetting).
 - RELAUNCH PLAN (registered): lr 5e-5, warmup 3%, bs per validated recipe,
   5-step smoke on one shard checking loss falls, THEN full run.
+
+## WATCH 2026-11-03T00:50Z — core8b relaunch (guj5b4at771anr) HEALTHY, ppl improving; budget overrun projected
+
+- lr 5e-5 relaunch is converging: [c8b] VAL ppl 2.17 (s300) -> 2.03 (s600) -> 1.97 (s900) -> 1.93 (s1200),
+  monotonic decrease. Divergence rule CLEARED (no monotonic loss rise; losses oscillate 0.006-1.5
+  per batch, normal). Log fresh (23 min old at check), step 1400, ~1025s/50 steps, 184M tok seen.
+- NOTE: run is 3034 total steps (steps/epoch=1517 x2), not 1516 as briefed — nothing wrong, just 2x steps
+  vs earlier briefing; ETA step 3034 ~09:55Z Nov-3.
+- BUDGET FLAG (material): $44.4 burned so far (8.4h x $5.29); remaining 1634 steps ~9.3h ~ $49 ->
+  projected total ~$94 for this run vs $80 pre-registered sanity flag. Decision for the user:
+  accept overrun (val trend is good) or early-stop at a checkpoint. NOT killed unilaterally.
+- shinobi: :8001 answers 200 but serves `spark-x2.6-1.7b`, NOT nyx-2-joint-v3 — unexpected model
+  identity. GPU otherwise quiet: 0% util, single python.exe server PID 30852 (~30GB), no stale
+  trainers. Needs user confirmation which model should be resident.
