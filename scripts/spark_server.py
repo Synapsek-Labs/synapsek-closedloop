@@ -16,6 +16,9 @@ import uvicorn
 MODEL_DIR = Path(sys.argv[1] if len(sys.argv) > 1
                  else r"C:\Users\User\hf_models\spark-x2.6-1.7b")
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8001
+# Report the SERVED model dir name, not a hardcoded base label — a stale
+# label caused a false identity alarm (2026-11-03 cron flag).
+MODEL_ID = MODEL_DIR.name
 
 # Wire tokens assembled from parts (kept out of literals above for safety).
 TC_O = "<" + "tool_call>"
@@ -47,7 +50,7 @@ def _load():
 
 
 class ChatReq(BaseModel):
-    model: str = "spark-x2.6-1.7b"
+    model: str = MODEL_ID
     messages: list[dict[str, Any]]
     temperature: float = 0.7
     max_tokens: int = 2048
@@ -59,7 +62,7 @@ class ChatReq(BaseModel):
 @app.get("/v1/models")
 def models():
     return {"object": "list",
-            "data": [{"id": "spark-x2.6-1.7b", "object": "model"}]}
+            "data": [{"id": MODEL_ID, "object": "model"}]}
 
 
 def _gen_kwargs(req: ChatReq):
