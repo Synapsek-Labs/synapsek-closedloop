@@ -107,7 +107,8 @@ def main():
                       truncation=True, max_length=MAXLEN).to("cuda:0")
             with torch.no_grad():
                 gen = model.generate(**enc, do_sample=True, temperature=0.7,
-                                     top_p=0.9, num_return_sequences=K,
+                                     top_p=0.9, top_k=None,  # Spark ships top_k=-1
+                                     num_return_sequences=K,
                                      max_new_tokens=MAXNEW,
                                      pad_token_id=tok.eos_token_id)
             plen = enc["input_ids"].shape[1]
