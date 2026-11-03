@@ -58,3 +58,30 @@ checkpoints live on the retained 100GB disk.
   path (ssh.runpod.io). Use direct SSH for pod operations.
 - Remaining options later: gate the s2100 checkpoint on a fresh burst,
   or resume ep2 in a cheaper window if the model is needed complete.
+
+## INCIDENT 2026-11-04 ~05:55Z — CORE-8B CHECKPOINTS LOST (post-stop mystery restart)
+
+- Engineer stop at ~05:15Z verified EXITED. Mystery START at 05:20:36Z
+  (fresh container, new SSH port) wiped the ephemeral disk ->
+  s1500/s1800/s2100 checkpoints (best val ppl 1.88) are LOST. Not the
+  engineer's restart; not the cron's; cause unknown (dashboard? auto-
+  policy? other agent?). USER: if you restarted the pod from the
+  dashboard ~05:20Z, that's the cause — and the lesson stands.
+- Confirmed NOT exported: no core8b dirs on shinobi hf_models (only
+  nyx-1/nyx-2 series). recv.py on pod was part of the training chain,
+  not an export pipeline.
+- What SURVIVED: the full training curve (val 2.17->2.03->1.97->1.93->
+  1.90->1.89->1.88, paper-ready), the validated relaunch recipe
+  (lr 5e-5, no divergence), and all training scripts/data prep in-repo.
+- Pod STOPPED again at ~05:55Z (EXITED, billing ended). The pod object
+  is now an empty shell — safe to terminate on next cleanup.
+- OPTIONS (user decision, ~$45-50 redo cost):
+  (a) RELAUNCH core8b from scratch (deterministic recipe, ~10.5h H200,
+      lands back at ~s2100-equivalent val ~1.88);
+  (b) hold core8b, ship the 1.7B line (nyx-2-joint-v3 already proven)
+      and revisit 8B later with the exported-checkpoint discipline
+      fixed (http.server/recv export loop BEFORE any stop);
+  (c) relaunch but with checkpoint export after EVERY val line
+      (adds ~10 min/val, removes this failure mode permanently).
+  Engineer recommends (c) when the 8B model is next scheduled, and
+  registry-grade export discipline in the runbook from now on.
