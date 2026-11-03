@@ -727,3 +727,21 @@ TWO SEPARATE PROJECTS. Never mix compute, ledgers, or docs.
 - shinobi: :8001 answers 200 but serves `spark-x2.6-1.7b`, NOT nyx-2-joint-v3 — unexpected model
   identity. GPU otherwise quiet: 0% util, single python.exe server PID 30852 (~30GB), no stale
   trainers. Needs user confirmation which model should be resident.
+
+## ENGINEER DECISIONS 2026-11-03T01:10Z
+
+1. H200 core8b relaunch (guj5b4at771anr): OVERRUN ACCEPTED. Val ppl
+   2.17->2.03->1.97->1.93 monotonic; divergence cleared; lr 5e-5 recipe
+   working as validated. Projected ~$94 total vs $80 sanity flag —
+   inside the <$100 pre-GO ceiling; letting it run to completion
+   (~09:55Z ETA). Safeguard: if val ppl flatlines or rises at the
+   s1500 line (ep1 boundary), early-stop at the step-1517 checkpoint
+   (saves ~$26). On completion: gate ON the pod, then STOP-not-
+   terminate (disk preserved), backup before any mutation (standing
+   pod rules).
+2. shinobi :8001 identity flag = FALSE ALARM. PID cmdlines (9440
+   launcher + 30852 serving child) both = hf_models/nyx-2-joint-v3;
+   live completion correct (Natalia 72, boxed). The /v1/models
+   "spark-x2.6-1.7b" string was a hardcoded label. Fixed:
+   spark_server.py now reports MODEL_ID = served dir name (pushed).
+   Running server NOT restarted (deployed; fix applies next restart).
