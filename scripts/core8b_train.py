@@ -55,9 +55,11 @@ if RESUME:
 else:
     model = get_peft_model(model, lcfg)
 model.print_trainable_parameters()
-# 32GB fit (anti-loss infra; identical math): grad checkpointing + expandable alloc
-model.gradient_checkpointing_enable()
-model.enable_input_require_grads()
+# 32GB fit (anti-loss infra; identical math): grad checkpointing optional
+# (off by default: 4-bit+checkpointing thrashes on sm_120; non-checkpointed fits)
+if os.environ.get("CORE8B_GCADDOPT", ""):
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
 
 p = model.parameters()
 optim = torch.optim.AdamW([q for q in p if q.requires_grad], lr=LR,
