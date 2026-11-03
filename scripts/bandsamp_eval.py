@@ -20,9 +20,9 @@ def main():
     for arm in ARMS:
         accs, dg = [], []
         for s in SEEDS:
-            of = json.loads((NODE / f"office_eval_v2_bs{arm}s{s}.json").read_text())
-            sf = json.loads((NODE / f"security_eval_v21_bs{arm}s{s}.json").read_text())
-            af = json.loads((NODE / f"audit_eval_v1_bs{arm}s{s}.json").read_text())
+            of = json.loads((NODE / f"office_eval_v2_bs{arm}{s}.json").read_text())
+            sf = json.loads((NODE / f"security_eval_v21_bs{arm}{s}.json").read_text())
+            af = json.loads((NODE / f"audit_eval_v1_bs{arm}{s}.json").read_text())
             no, ns, na = of["n"], sf["n"], af["n"]
             comp = (of["office_v2_acc"] * no + sf["security_v21_acc"] * ns
                     + af["audit_v1_acc"] * na) / (no + ns + na)
