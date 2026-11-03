@@ -43,3 +43,18 @@ EXCEPTION: if s2100 val improves >0.05 over 1.89, do NOT kill — hold
 and ping the engineer (that would signal ep2 is unexpectedly paying).
 On stop: gate on pod later only if a fresh decision funds it; adapter
 checkpoints live on the retained 100GB disk.
+
+## TRACK 1 EARLY-STOP EXECUTED 2026-11-04 ~05:15Z (engineer)
+- s2100 VAL ppl = 1.88 (new low, delta -0.01 vs 1.89) — far under the
+  +0.05 jump exception -> registered early-stop criterion SATISFIED.
+- Training process KILLED via direct SSH (pkill; verified — only infra
+  procs remain). Pod STOPPED (not terminated): 100GB disk retained with
+  all checkpoints (s1500/1800/2100 banked; best val 1.88).
+- Core-8B run outcome: CONVERGED, not completed — banked artifact is the
+  s2100 checkpoint; full training curve 2.17->...->1.88 recorded for the
+  paper. Cost capped inside the envelope (~$72-85 GPU cumulative).
+- Ops lesson banked: DIRECT ssh (root@IP -p PORT, from pod API) supports
+  one-shot exec — the broken-stdin problem applies only to the PROXY
+  path (ssh.runpod.io). Use direct SSH for pod operations.
+- Remaining options later: gate the s2100 checkpoint on a fresh burst,
+  or resume ep2 in a cheaper window if the model is needed complete.
