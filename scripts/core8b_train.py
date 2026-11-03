@@ -21,6 +21,10 @@ EPOCHS = 2
 LR = float(os.environ.get("CORE8B_LR", "5e-5"))
 WARMUP = float(os.environ.get("CORE8B_WARMUP", "0.03"))
 SMOKE = int(os.environ.get("CORE8B_SMOKE", "0"))  # >0 = run only N steps, print each
+# RESUME (anti-loss rule 2): CORE8B_RESUME=<adapter ckpt dir> + CORE8B_START_STEP=<n>
+# Weights resume only (fresh optimizer); data order deterministic via seed 7.
+RESUME = os.environ.get("CORE8B_RESUME", "")
+START_STEP = int(os.environ.get("CORE8B_START_STEP", "0"))
 DEV = "cuda"
 
 train = np.load(DATA / "train_blocks.npy", mmap_mode="r")
@@ -44,8 +48,16 @@ lcfg = LoraConfig(r=64, lora_alpha=128, lora_dropout=0.05, bias="none",
                   task_type="CAUSAL_LM",
                   target_modules=["q_proj","k_proj","v_proj","o_proj",
                                   "gate_proj","up_proj","down_proj"])
-model = get_peft_model(model, lcfg)
+if RESUME:
+    from peft import PeftModel
+    model = PeftModel.from_pretrained(model, RESUME, is_trainable=True)
+    print(f"RESUMED weights from {RESUME} @ step {START_STEP}", flush=True)
+else:
+    model = get_peft_model(model, lcfg)
 model.print_trainable_parameters()
+# 32GB fit (anti-loss infra; identical math): grad checkpointing + expandable alloc
+model.gradient_checkpointing_enable()
+model.enable_input_require_grads()
 
 p = model.parameters()
 optim = torch.optim.AdamW([q for q in p if q.requires_grad], lr=LR,
@@ -66,10 +78,15 @@ def val_ppl(model, n=64):
     model.train(); return math.exp(tot / cnt)
 
 g = torch.Generator().manual_seed(7)
-step = 0; t0 = time.time(); hist = []
+step = START_STEP; t0 = time.time(); hist = []
+if step:
+    for _ in range(step):
+        sched.step()  # fast-forward LR schedule to resume point
 for ep in range(EPOCHS):
     order = torch.randperm(N, generator=g).numpy()
     for s in range(steps_per_epoch):
+        if ep * steps_per_epoch + s < step:
+            continue  # deterministic skip: same generator sequence, no forward
         idx = order[s*BS*ACC:(s+1)*BS*ACC]
         for m in range(ACC):
             micro = np.stack([train[j] for j in idx[m*BS:(m+1)*BS]])
