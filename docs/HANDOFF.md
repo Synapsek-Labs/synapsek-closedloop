@@ -22,3 +22,24 @@ All research state, pre-registrations and internal plans now live in the Synapse
   tool-exec phases by design (CPU-bound on a loaded machine).
 - v2 battery partials (context, verdict pending chain completion):
   mkdir PASS, append PASS; sort/count/avg/max FAIL so far (seeds pending).
+
+## ENGINEER DECISION 2026-11-03 ~13:20Z — Track 1 billing verified; EARLY-STOP AT s2100 VAL
+
+Billing-API ground truth (cron estimates were wrong twice over):
+- Nov-3 bucket GPU = $16.31 (~3.1h H200) — the pod was STOPPED for
+  ~20h during Nov 3 (silent stop, likely maintenance; resume-from-
+  checkpoint worked, run continued at step 1950). Cumulative relaunch
+  GPU spend: ~$72 across Nov-2/3 buckets — NOT out of control.
+- BUT the pace after resume is slow (~2400-3400s/50 steps vs 1025
+  nominal). Completing 1084 remaining steps costs $33-100+ more ->
+  projected total $105-178 -> BREACHES the $100 hard ceiling.
+
+DECISION (per the registered s2100 fallback): let the run reach the
+s2100 VAL line (~150 steps, ~$6-13), bank the checkpoint, then KILL
+TRAINING and STOP the pod (not terminate; disk preserved). Val was
+improving only ~0.01/line at ep1 tail — remaining ep2 buys ~0.02-0.05
+ppl for $33-100+: negative expected value per dollar.
+EXCEPTION: if s2100 val improves >0.05 over 1.89, do NOT kill — hold
+and ping the engineer (that would signal ep2 is unexpectedly paying).
+On stop: gate on pod later only if a fresh decision funds it; adapter
+checkpoints live on the retained 100GB disk.
