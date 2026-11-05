@@ -11,7 +11,11 @@ ADAPTER_DIR = Path(sys.argv[2])
 PORT = int(sys.argv[3]) if len(sys.argv) > 3 else 8009
 MODEL_ID = ADAPTER_DIR.name + "-wrapped"
 
+# spark_server parses argv at module level (expects [.., model_dir, port]);
+# sanitize before the import so it sees our base dir + port.
+sys.argv = [sys.argv[0], str(BASE_DIR), str(PORT)]
 import spark_server as ss
+sys.argv = [sys.argv[0], str(BASE_DIR), str(ADAPTER_DIR), str(PORT)]
 
 _orig_load = ss._load
 
