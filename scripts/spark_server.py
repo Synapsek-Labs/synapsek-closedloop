@@ -76,26 +76,70 @@ def _gen_kwargs(req: ChatReq):
 TC_RE = re.compile(
     re.escape(TC_O) + r"\s*(?P<name>[^<\s]+)(?P<args>.*?)" + re.escape(TC_C),
     re.DOTALL)
+# Whole-body match (name may itself be JSON when the model emits Qwen-style
+# JSON tool calls inside the Spark TC envelope — the 8B office 0/22 root cause).
+TC_BODY_RE = re.compile(
+    re.escape(TC_O) + r"(?P<body>.*?)" + re.escape(TC_C), re.DOTALL)
 ARG_RE = re.compile(
     re.escape(AK_O) + r"(.*?)" + re.escape(AK_C) + r"\s*" +
     re.escape(AV_O) + r"(.*?)" + re.escape(AV_C), re.DOTALL)
 
 
+def _parse_one_body(body: str):
+    """Parse one TC body. Returns (name, args_dict) or None if unparseable."""
+    body = body.strip()
+    # Strip optional ```json fencing some models wrap around the body.
+    if body.startswith("```"):
+        body = re.sub(r"^```[a-zA-Z]*\s*|\s*```$", "", body).strip()
+    # JSON body: {"name":..., "arguments":{...}} (Qwen/8B corpus format)
+    if body.startswith("{"):
+        try:
+            obj = json.loads(body)
+        except (json.JSONDecodeError, ValueError):
+            return None
+        if not isinstance(obj, dict):
+            return None
+        fn = obj.get("function")
+        if not isinstance(fn, dict):
+            fn = obj
+        name = fn.get("name")
+        if not name:
+            return None
+        args = fn.get("arguments", obj.get("parameters", {}))
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except (json.JSONDecodeError, ValueError):
+                args = {"raw": args}
+        if not isinstance(args, dict):
+            args = {"raw": args}
+        return name, args
+    # Legacy Spark schema: NAME<AK>k</AK><AV>v</AV>...
+    m = re.match(r"(?P<name>[^<\s]+)(?P<args>.*)", body, re.DOTALL)
+    if not m:
+        return None
+    args = {}
+    for am in ARG_RE.finditer(m.group("args")):
+        k, v = am.group(1).strip(), am.group(2).strip()
+        try:
+            args[k] = json.loads(v)
+        except (json.JSONDecodeError, ValueError):
+            args[k] = v
+    return m.group("name").strip(), args
+
+
 def _parse_tool_calls(text: str):
     calls = []
-    for m in TC_RE.finditer(text):
-        args = {}
-        for am in ARG_RE.finditer(m.group("args")):
-            k, v = am.group(1).strip(), am.group(2).strip()
-            try:
-                args[k] = json.loads(v)
-            except (json.JSONDecodeError, ValueError):
-                args[k] = v
+    for m in TC_BODY_RE.finditer(text):
+        parsed = _parse_one_body(m.group("body"))
+        if not parsed:
+            continue
+        name, args = parsed
         calls.append({"id": f"call_{len(calls)}",
                       "type": "function",
-                      "function": {"name": m.group("name").strip(),
+                      "function": {"name": name,
                                    "arguments": json.dumps(args)}})
-    return calls, TC_RE.sub("", text).strip()
+    return calls, TC_BODY_RE.sub("", text).strip()
 
 
 def _render(req: ChatReq):
