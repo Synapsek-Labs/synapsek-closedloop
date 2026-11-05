@@ -59,6 +59,43 @@ class ChatReq(BaseModel):
     tool_choice: Optional[Any] = None
 
 
+class CompletionsReq(BaseModel):
+    model: str = MODEL_ID
+    prompt: str
+    max_tokens: int = 2048
+    temperature: float = 0.7
+    stop: Optional[list[str]] = None
+
+
+@app.post("/v1/completions")
+def completions(req: CompletionsReq):
+    # Legacy completions API for BFCL's OSS handler (raw pre-formatted prompt).
+    # Decode WITHOUT skipping special tokens: BFCL's qwen handler parses
+    # <think>/<answer> sections from the raw text; only strip trailing EOD tags.
+    ids = _tok(req.prompt, return_tensors="pt").to(_model.device)
+    t0 = time.time()
+    out = _model.generate(
+        **ids, max_new_tokens=req.max_tokens,
+        do_sample=req.temperature > 0, temperature=max(req.temperature, 1e-5),
+        top_p=0.95, top_k=None,
+        pad_token_id=_tok.pad_token_id or _tok.eos_token_id)
+    text = _tok.decode(out[0][ids["input_ids"].shape[1]:],
+                       skip_special_tokens=False)
+    for tail in ('<|im_end|>', '</answer>'):
+        if text.endswith(tail):
+            text = text[: -len(tail)]
+    dt = time.time() - t0
+    n_out = out.shape[1] - ids["input_ids"].shape[1]
+    print(f"[spark-server] completions {n_out} tok in {dt:.1f}s "
+          f"({n_out/dt:.1f} tok/s)", flush=True)
+    return {"id": "spark", "object": "text_completion",
+            "created": int(time.time()), "model": req.model,
+            "choices": [{"text": text, "index": 0,
+                         "finish_reason": "stop" if n_out < req.max_tokens else "length"}],
+            "usage": {"prompt_tokens": ids["input_ids"].shape[1],
+                      "completion_tokens": n_out}}
+
+
 @app.get("/v1/models")
 def models():
     return {"object": "list",
