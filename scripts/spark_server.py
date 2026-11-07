@@ -176,7 +176,38 @@ def _parse_tool_calls(text: str):
                       "type": "function",
                       "function": {"name": name,
                                    "arguments": json.dumps(args)}})
-    return calls, TC_BODY_RE.sub("", text).strip()
+    if calls:
+        return calls, TC_BODY_RE.sub("", text).strip()
+    # Fallback: Qwen-style ```json fenced calls (or bare JSON objects).
+    # Root cause of BFCL multi_turn 0/200 (2026-11-08): in multi-turn
+    # context the model emits fenced {"name":...,"arguments":{...}}
+    # instead of the Spark envelope; without this pass the raw fence
+    # leaks into content and the MT state executor fails every turn.
+    consumed = []
+    for m in re.finditer(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL):
+        parsed = _parse_one_body(m.group(1))
+        if parsed:
+            name, args = parsed
+            calls.append({"id": f"call_{len(calls)}",
+                          "type": "function",
+                          "function": {"name": name,
+                                       "arguments": json.dumps(args)}})
+            consumed.append(m.group(0))
+    if not calls:
+        for m in re.finditer(r"\{[^{}]*\"name\"\s*:.*?\}", text, re.DOTALL):
+            parsed = _parse_one_body(m.group(0))
+            if parsed:
+                name, args = parsed
+                calls.append({"id": f"call_{len(calls)}",
+                              "type": "function",
+                              "function": {"name": name,
+                                           "arguments": json.dumps(args)}})
+                consumed.append(m.group(0))
+            if len(calls) >= 8:
+                break
+    for c in consumed:
+        text = text.replace(c, "", 1)
+    return calls, text.strip()
 
 
 def _render(req: ChatReq):
