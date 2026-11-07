@@ -71,14 +71,32 @@ class CompletionsReq(BaseModel):
 def completions(req: CompletionsReq):
     # Legacy completions API for BFCL's OSS handler (raw pre-formatted prompt).
     # Decode WITHOUT skipping special tokens: BFCL's qwen handler parses
-    # <think>/<answer> sections from the raw text; only strip trailing EOD tags.
-    ids = _tok(req.prompt, return_tensors="pt").to(_model.device)
+    # 	&<answer> sections from the raw text; only strip trailing EOD tags.
+    # OOM guard (2026-11-08): giant BFCL multi_turn_long_context prompts blew
+    # VRAM and killed the whole server mid-run twice. Now a single entry fails
+    # with a clean 500 + cache clear; the server survives.
+    import torch
+    from fastapi import HTTPException
+    global _last_oom
+    try:
+        ids = _tok(req.prompt, return_tensors="pt").to(_model.device)
+    except torch.cuda.OutOfMemoryError:
+        torch.cuda.empty_cache()
+        _last_oom = time.time()
+        print("[spark-server] OOM on prompt, entry failed (503)", flush=True)
+        raise HTTPException(status_code=503, detail="prompt OOM")
     t0 = time.time()
-    out = _model.generate(
-        **ids, max_new_tokens=req.max_tokens,
-        do_sample=req.temperature > 0, temperature=max(req.temperature, 1e-5),
-        top_p=0.95, top_k=None,
-        pad_token_id=_tok.pad_token_id or _tok.eos_token_id)
+    try:
+        out = _model.generate(
+            **ids, max_new_tokens=req.max_tokens,
+            do_sample=req.temperature > 0, temperature=max(req.temperature, 1e-5),
+            top_p=0.95, top_k=None,
+            pad_token_id=_tok.pad_token_id or _tok.eos_token_id)
+    except torch.cuda.OutOfMemoryError:
+        torch.cuda.empty_cache()
+        _last_oom = time.time()
+        print("[spark-server] OOM in generate, entry failed (503)", flush=True)
+        raise HTTPException(status_code=503, detail="generate OOM")
     text = _tok.decode(out[0][ids["input_ids"].shape[1]:],
                        skip_special_tokens=False)
     for tail in ('<|im_end|>', '</answer>'):
@@ -117,6 +135,7 @@ TC_RE = re.compile(
 # JSON tool calls inside the Spark TC envelope — the 8B office 0/22 root cause).
 TC_BODY_RE = re.compile(
     re.escape(TC_O) + r"(?P<body>.*?)" + re.escape(TC_C), re.DOTALL)
+_last_oom = 0.0
 ARG_RE = re.compile(
     re.escape(AK_O) + r"(.*?)" + re.escape(AK_C) + r"\s*" +
     re.escape(AV_O) + r"(.*?)" + re.escape(AV_C), re.DOTALL)
