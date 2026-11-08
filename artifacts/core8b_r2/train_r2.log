@@ -1,0 +1,76 @@
+nohup: ignoring input
+blocks=48573 steps/epoch=1517 lr=5e-05 warmup=0.03 smoke=0
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<01:22,  4.81it/s]Loading weights:   1%|          | 2/399 [00:00<01:22,  4.81it/s]Loading weights:   2%|▏         | 6/399 [00:00<00:26, 14.63it/s]Loading weights:   7%|▋         | 26/399 [00:00<00:05, 67.26it/s]Loading weights:  10%|▉         | 39/399 [00:00<00:04, 84.49it/s]Loading weights:  15%|█▍        | 59/399 [00:00<00:02, 116.58it/s]Loading weights:  18%|█▊        | 73/399 [00:00<00:02, 121.90it/s]Loading weights:  23%|██▎       | 92/399 [00:01<00:02, 140.57it/s]Loading weights:  27%|██▋       | 107/399 [00:01<00:02, 141.45it/s]Loading weights:  31%|███▏      | 125/399 [00:01<00:01, 151.52it/s]Loading weights:  35%|███▌      | 141/399 [00:01<00:01, 151.45it/s]Loading weights:  40%|███▉      | 158/399 [00:01<00:01, 156.57it/s]Loading weights:  44%|████▎     | 174/399 [00:01<00:01, 155.05it/s]Loading weights:  48%|████▊     | 191/399 [00:01<00:01, 158.93it/s]Loading weights:  52%|█████▏    | 208/399 [00:01<00:01, 156.61it/s]Loading weights:  56%|█████▋    | 225/399 [00:01<00:01, 155.39it/s]Loading weights:  61%|██████    | 243/399 [00:01<00:00, 162.07it/s]Loading weights:  65%|██████▌   | 260/399 [00:02<00:00, 154.20it/s]Loading weights:  70%|██████▉   | 279/399 [00:02<00:00, 163.11it/s]Loading weights:  74%|███████▍  | 296/399 [00:02<00:00, 159.81it/s]Loading weights:  78%|███████▊  | 313/399 [00:02<00:00, 160.43it/s]Loading weights:  83%|████████▎ | 331/399 [00:02<00:00, 165.76it/s]Loading weights:  87%|████████▋ | 348/399 [00:02<00:00, 156.04it/s]Loading weights:  92%|█████████▏| 367/399 [00:02<00:00, 164.11it/s]Loading weights:  96%|█████████▌| 384/399 [00:02<00:00, 160.31it/s]Loading weights: 100%|██████████| 399/399 [00:02<00:00, 135.47it/s]
+trainable params: 174,587,904 || all params: 8,365,323,264 || trainable%: 2.0870
+[c8b] ep1 step 50/3034 tok=7M loss=1.292 lr=2.75e-05 (1138s)
+[c8b] ep1 step 100/3034 tok=13M loss=0.596 lr=5.00e-05 (2354s)
+[c8b] ep1 step 150/3034 tok=20M loss=0.568 lr=5.00e-05 (3584s)
+[c8b] ep1 step 200/3034 tok=26M loss=0.711 lr=4.98e-05 (4805s)
+[c8b] ep1 step 250/3034 tok=33M loss=0.939 lr=4.96e-05 (6022s)
+[c8b] ep1 step 300/3034 tok=39M loss=1.249 lr=4.94e-05 (7218s)
+[c8b] VAL step 300 ppl=2.17
+[c8b] ep1 step 350/3034 tok=46M loss=0.239 lr=4.91e-05 (8426s)
+[c8b] ep1 step 400/3034 tok=52M loss=0.746 lr=4.87e-05 (9602s)
+[c8b] ep1 step 450/3034 tok=59M loss=1.480 lr=4.82e-05 (10770s)
+[c8b] ep1 step 500/3034 tok=66M loss=0.103 lr=4.77e-05 (11930s)
+[c8b] ep1 step 550/3034 tok=72M loss=1.141 lr=4.71e-05 (13085s)
+[c8b] ep1 step 600/3034 tok=79M loss=1.161 lr=4.64e-05 (14235s)
+[c8b] VAL step 600 ppl=2.03
+[c8b] ep1 step 650/3034 tok=85M loss=0.743 lr=4.57e-05 (15403s)
+[c8b] ep1 step 700/3034 tok=92M loss=0.006 lr=4.49e-05 (16550s)
+[c8b] ep1 step 750/3034 tok=98M loss=0.994 lr=4.41e-05 (17696s)
+[c8b] ep1 step 800/3034 tok=105M loss=0.552 lr=4.32e-05 (18840s)
+[c8b] ep1 step 850/3034 tok=111M loss=0.140 lr=4.22e-05 (19983s)
+[c8b] ep1 step 900/3034 tok=118M loss=1.028 lr=4.12e-05 (21126s)
+[c8b] VAL step 900 ppl=1.96
+[c8b] ep1 step 950/3034 tok=125M loss=0.451 lr=4.02e-05 (22289s)
+[c8b] ep1 step 1000/3034 tok=131M loss=0.280 lr=3.91e-05 (23431s)
+[c8b] ep1 step 1050/3034 tok=138M loss=1.156 lr=3.80e-05 (24573s)
+[c8b] ep1 step 1100/3034 tok=144M loss=0.359 lr=3.68e-05 (25713s)
+[c8b] ep1 step 1150/3034 tok=151M loss=1.164 lr=3.57e-05 (26850s)
+[c8b] ep1 step 1200/3034 tok=157M loss=0.581 lr=3.44e-05 (27989s)
+[c8b] VAL step 1200 ppl=1.93
+[c8b] ep1 step 1250/3034 tok=164M loss=0.929 lr=3.32e-05 (29149s)
+[c8b] ep1 step 1300/3034 tok=170M loss=0.553 lr=3.19e-05 (30287s)
+[c8b] ep1 step 1350/3034 tok=177M loss=0.462 lr=3.06e-05 (31426s)
+[c8b] ep1 step 1400/3034 tok=184M loss=0.214 lr=2.93e-05 (32565s)
+[c8b] ep1 step 1450/3034 tok=190M loss=5.384 lr=2.80e-05 (33704s)
+[c8b] ep1 step 1500/3034 tok=197M loss=0.512 lr=2.67e-05 (34842s)
+[c8b] VAL step 1500 ppl=1.90
+[c8b] ep2 step 1550/3034 tok=203M loss=0.225 lr=2.53e-05 (36002s)
+[c8b] ep2 step 1600/3034 tok=210M loss=1.136 lr=2.40e-05 (37140s)
+[c8b] ep2 step 1650/3034 tok=216M loss=0.200 lr=2.27e-05 (38277s)
+[c8b] ep2 step 1700/3034 tok=223M loss=0.628 lr=2.13e-05 (39415s)
+[c8b] ep2 step 1750/3034 tok=229M loss=0.592 lr=2.00e-05 (40553s)
+[c8b] ep2 step 1800/3034 tok=236M loss=0.565 lr=1.87e-05 (41692s)
+[c8b] VAL step 1800 ppl=1.89
+[c8b] ep2 step 1850/3034 tok=242M loss=0.271 lr=1.74e-05 (42852s)
+[c8b] ep2 step 1900/3034 tok=249M loss=0.936 lr=1.62e-05 (43990s)
+[c8b] ep2 step 1950/3034 tok=256M loss=0.064 lr=1.50e-05 (45129s)
+[c8b] ep2 step 2000/3034 tok=262M loss=0.125 lr=1.37e-05 (46267s)
+[c8b] ep2 step 2050/3034 tok=269M loss=1.313 lr=1.26e-05 (47405s)
+[c8b] ep2 step 2100/3034 tok=275M loss=1.133 lr=1.14e-05 (48543s)
+[c8b] VAL step 2100 ppl=1.88
+[c8b] ep2 step 2150/3034 tok=282M loss=0.662 lr=1.03e-05 (49703s)
+[c8b] ep2 step 2200/3034 tok=288M loss=0.470 lr=9.27e-06 (50841s)
+[c8b] ep2 step 2250/3034 tok=295M loss=0.444 lr=8.26e-06 (51979s)
+[c8b] ep2 step 2300/3034 tok=301M loss=1.773 lr=7.29e-06 (53117s)
+[c8b] ep2 step 2350/3034 tok=308M loss=0.568 lr=6.37e-06 (54255s)
+[c8b] ep2 step 2400/3034 tok=315M loss=0.252 lr=5.51e-06 (55393s)
+[c8b] VAL step 2400 ppl=1.87
+[c8b] ep2 step 2450/3034 tok=321M loss=0.008 lr=4.70e-06 (56554s)
+[c8b] ep2 step 2500/3034 tok=328M loss=1.118 lr=3.95e-06 (57692s)
+[c8b] ep2 step 2550/3034 tok=334M loss=0.203 lr=3.26e-06 (58829s)
+[c8b] ep2 step 2600/3034 tok=341M loss=0.004 lr=2.64e-06 (59966s)
+[c8b] ep2 step 2650/3034 tok=347M loss=0.314 lr=2.07e-06 (61104s)
+[c8b] ep2 step 2700/3034 tok=354M loss=2.195 lr=1.57e-06 (62242s)
+[c8b] VAL step 2700 ppl=1.87
+[c8b] ep2 step 2750/3034 tok=360M loss=0.950 lr=1.14e-06 (63401s)
+[c8b] ep2 step 2800/3034 tok=367M loss=0.528 lr=7.76e-07 (64539s)
+[c8b] ep2 step 2850/3034 tok=374M loss=1.138 lr=4.81e-07 (65678s)
+[c8b] ep2 step 2900/3034 tok=380M loss=0.659 lr=2.55e-07 (66815s)
+[c8b] ep2 step 2950/3034 tok=387M loss=0.142 lr=1.00e-07 (67953s)
+[c8b] ep2 step 3000/3034 tok=393M loss=0.156 lr=1.65e-08 (69090s)
+[c8b] VAL step 3000 ppl=1.87
+TRAIN DONE {"final_val_ppl": 1.865573593782155, "steps": 3034, "tokens_B": 0.397672448}
