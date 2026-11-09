@@ -69,7 +69,10 @@ def main():
         # allocate budget evenly across the 11 L35 matrices
         n_rows = a.shape[0]
         take = min(n_rows, max(1, int(round(budget / 11 / max(a.shape[-1], 1)))))
-        idx = torch.topk(d, take).indices
+        take_n = int(min(take, d.numel()))
+        if take_n < 1:
+            continue
+        idx = torch.topk(d, take_n).indices
         rows = a.clone()
         rows[idx] = (1 - ALPHA) * a[idx] + ALPHA * b[idx]
         ss[k] = rows.to(ss[k].dtype)
