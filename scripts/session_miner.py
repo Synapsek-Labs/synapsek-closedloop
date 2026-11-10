@@ -24,7 +24,11 @@ LAB_NET_ALLOW = re.compile(
     r"(?:shinobi|arxiv\.org|\.runpod\.|runpod\.io|githubusercontent\.com|github\.com"
     r"|huggingface\.co|hf\.co|pypi\.org|pythonhosted\.org|npmjs\.org|microsoft\.com"
     r"|openrouter\.ai|synapsek|zenodo\.org|w3\.org|localhost|127\.0\.0\.1|192\.168\.0\."
-    r"|tailscale|100\.84\.100\.77)", re.IGNORECASE)
+    r"|tailscale|100\.84\.100\.77"
+    # common build/docs destinations recorded in dev-agent sessions (benign, well-known)
+    r"|apple\.com|macports\.org|brew\.sh|ninja-build\.org|googlesource\.com|ghcr\.io"
+    r"|playwright\.dev|webmproject\.org|rubydoc\.info|pytorch\.org|apache\.org"
+    r"|aclanthology\.org|pypa\.io)", re.IGNORECASE)
 
 
 # true destination extraction: URLs and ssh targets only (the end-user scanner's
@@ -109,8 +113,23 @@ def main():
     ap.add_argument("db"); ap.add_argument("out"); ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
     rows = extract_rows(a.db)
-    banked, rejected = 0, []
     out = Path(a.out)
+    already = set()
+    if out.exists():
+        for line in open(out, encoding="utf-8"):
+            try:
+                already.add(json.loads(line)["session_id"])
+            except Exception:
+                pass
+    rej_path = out.with_suffix(".rejects.jsonl")
+    if out.with_suffix(".rejects.jsonl").exists():
+        for line in open(rej_path, encoding="utf-8"):
+            try:
+                already.add(json.loads(line)["session"])  # previously rejected: skip too
+            except Exception:
+                pass
+    rows = [r for r in rows if r["session_id"] not in already]  # dedup: sessions never re-bank
+    banked, rejected = 0, []
     if not a.dry_run:
         out.parent.mkdir(parents=True, exist_ok=True)
         seen = 0
