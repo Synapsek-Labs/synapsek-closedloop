@@ -63,9 +63,40 @@ SYS = ("You are an expert engineering agent with typed tools (terminal, read_fil
        "exactly. Be efficient: few calls, exact results. When the task is fully done, "
        "reply with a single line starting FINAL: summarizing the outcome.")
 
-# ---- C5: format-clean check on banked assistant content ----
-FENCE_RE = re.compile(r"```")
-THINK_RE = re.compile(r"<think|thought[:_ ]|let me ", re.IGNORECASE)
+# ---- C5: format-clean, v2 (2026-11-11 amendment: v1 rejected ~90% of CORRECT rows) ----
+# Bank-time NORMALIZATION + narrow reject: real thought-leak only.
+_T_O = "<" + "think>"
+_T_C = "</" + "think>"
+THINK_BLOCK_RE = re.compile(re.escape(_T_O) + r".*?" + re.escape(_T_C), re.DOTALL)
+THINK_OPEN_RE = re.compile(r"<think")
+# a fenced FINAL line = malformed verdict the student must not learn
+FENCED_FINAL_RE = re.compile(r"FINAL:.*```", re.DOTALL)
+FENCE_PAIR_RE = re.compile(r"```[a-zA-Z0-9_-]*\n(.*?)```", re.DOTALL)
+
+
+def normalize_content(text):
+    """Strip think blocks and stray code fences from banked assistant content.
+    v1 rejected any '```'/'let me' — it killed correct rows (harness artifact, same class
+    as the java/js 0% null). Prose narration is fine; we only remove true format noise."""
+    text = THINK_BLOCK_RE.sub("", text)
+    # remove fenced blocks entirely (the teacher fences its scratch code; the student
+    # corpus target is clean prose + tool calls)
+    text = FENCE_PAIR_RE.sub("", text)
+    # drop any leftover lone fence markers
+    text = text.replace("```", "")
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def format_clean(messages):
+    """True if the trajectory has no REAL format disease left (after normalization)."""
+    for m in messages:
+        if m.get("role") == "assistant":
+            c = m.get("content") or ""
+            if THINK_OPEN_RE.search(c):
+                return False  # unterminated think block
+            if FENCED_FINAL_RE.search(c):
+                return False  # FINAL answer wrapped in a fence
+    return True
 
 def run_tool(name, args):
     """Execute one typed tool call against the sandbox. C2: outputs carry live-style noise."""
@@ -306,7 +337,8 @@ def mk(seed):
                 return False
     elif fam in (8, 9):  # C4 audit pairs: 8=vuln, 9=benign look-alike
         content, is_vuln = audit_pair(seed)
-        setup = [f'python -c "open(\'code_under_audit.txt\',\'w\').write({content!r})"']
+        # direct write marker (shell one-liners proved quoting-fragile on cmd.exe)
+        setup = [{"__write__": ("code_under_audit.txt", content)}]
         verdict = "VULNERABLE" if is_vuln else "CLEAN"
         task = ("Audit code_under_audit.txt for security issues. If it contains an unsafe "
                 "pattern (eval of user input, SQL string concatenation, or a hardcoded "
@@ -372,7 +404,11 @@ def solve(task, setup, messages=None):
             shutil.rmtree(SBX)
         SBX.mkdir(parents=True)
         for c in setup:
-            subprocess.run(c, shell=True, cwd=SBX, capture_output=True, text=True, timeout=60)
+            if isinstance(c, str):
+                subprocess.run(c, shell=True, cwd=SBX, capture_output=True, text=True, timeout=60)
+            else:
+                p, data = c["__write__"]
+                (SBX / p).write_text(data, encoding="utf-8")
         messages = [{"role": "system", "content": SYS},
                     {"role": "user", "content": task}]
     steps = 0
@@ -406,13 +442,21 @@ def solve(task, setup, messages=None):
     return messages, steps
 
 def format_clean(messages):
-    """C5: no code fences / thought leakage in assistant content."""
+    """C5 v2: no REAL format disease (think blocks / fenced FINAL) — normalization happens at bank."""
     for m in messages:
         if m.get("role") == "assistant":
             c = m.get("content") or ""
-            if FENCE_RE.search(c) or THINK_RE.search(c):
+            if THINK_OPEN_RE.search(c) or FENCED_FINAL_RE.search(c):
                 return False
     return True
+
+
+def normalize_messages(messages):
+    for m in messages:
+        if m.get("role") == "assistant" and m.get("content"):
+            m["content"] = normalize_content(m["content"])
+    return messages
+
 
 def main():
     banked = rejects = 0
@@ -439,6 +483,7 @@ def main():
             continue
         phases = 1 if not followup else 2
         if row_ok and format_clean(messages):
+            normalize_messages(messages)
             row = {"id": banked, "fam": fam, "phases": phases, "n_steps": steps,
                    "messages": messages, "seed": seed - 1}
             with open(OUT, "a", encoding="utf-8") as f:
