@@ -496,6 +496,11 @@ def main():
             seed += 1
             continue
         setup, task, followup, verify2, fam, verify = mk(seed)
+        # C3-AMEND: pre-solve skip — a seed with no followup (single-phase) will be
+        # mt-quota-rejected after a ~15min solve; skip it BEFORE burning teacher time.
+        if (not followup) and banked > 0 and mt_banked < 0.5 * (banked + 1):
+            seed += 1
+            continue
         seed += 1
         try:
             messages, steps = solve(task, setup)
