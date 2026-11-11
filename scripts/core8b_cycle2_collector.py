@@ -11,9 +11,19 @@ import requests
 BASE_URL = os.environ.get("TEACHER_URL", "http://127.0.0.1:8002/v1/chat/completions")
 NODE = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 SBX = Path(os.environ.get("CYCLE2_SANDBOX", str(NODE / "cycle2_sbx")))
-OUT = NODE / "work_core8b_cycle2.jsonl"
-REJECT_LOG = NODE / "cycle2_rejects.jsonl"
+SHARDS = int(os.environ.get("CYCLE2_SHARDS", "1"))
+SHARD = int(os.environ.get("CYCLE2_SHARD", "0"))
 TARGET = int(os.environ.get("CYCLE2_TARGET", "400"))
+if SHARDS > 1:
+    OUT = NODE / f"work_core8b_cycle2.s{SHARD}.jsonl"
+    REJECT_LOG = NODE / f"cycle2_rejects.s{SHARD}.jsonl"
+    if not os.environ.get("CYCLE2_SANDBOX"):
+        SBX = NODE / f"cycle2_sbx.s{SHARD}"
+else:
+    OUT = NODE / "work_core8b_cycle2.jsonl"
+    REJECT_LOG = NODE / "cycle2_rejects.jsonl"
+# Per-shard quota so the shards sum to TARGET (137/132/132 etc.).
+TARGET = TARGET // SHARDS + (1 if SHARD < TARGET % SHARDS else 0)
 MAX_TURNS = 14
 
 # ---- C1: TYPED tools, live-style schemas (defaults, enums, optional params) ----
@@ -459,15 +469,32 @@ def normalize_messages(messages):
 
 
 def main():
-    banked = rejects = 0
+    banked = rejects = mt_banked = 0
     seed = 0
     t0 = time.time()
+    existing = set()
     def p(s):
         print(s, flush=True)
     if OUT.exists():
-        banked = sum(1 for _ in open(OUT, encoding="utf-8"))
-        p(f"[c2] resume: {banked} rows already banked")
-    while banked < TARGET and seed < TARGET * 5:
+        # C3-AMEND + resume fix: track banked seeds so restarts never re-solve
+        # a seed (v1 restarted at seed 0 and banked duplicates); count = distinct seeds.
+        for line in open(OUT, encoding="utf-8"):
+            try:
+                r = json.loads(line)
+                existing.add(r["seed"])
+                mt_banked += 1 if r.get("phases", 1) == 2 else 0
+            except Exception:
+                pass
+        banked = len(existing)
+        p(f"[c2] resume: {banked} distinct rows already banked "
+          f"(mt={mt_banked}, {100*mt_banked/max(banked,1):.0f}%)")
+    while banked < TARGET and seed < TARGET * SHARDS * 5 + 2000:
+        if SHARDS > 1 and seed % SHARDS != SHARD:
+            seed += 1
+            continue
+        if seed in existing:
+            seed += 1
+            continue
         setup, task, followup, verify2, fam, verify = mk(seed)
         seed += 1
         try:
@@ -483,12 +510,24 @@ def main():
             continue
         phases = 1 if not followup else 2
         if row_ok and format_clean(messages):
+            # C3-AMEND (2026-11-11): single-phase rows bank only while they keep
+            # banked MT share >= 50% (even-seed rows fail phase-2 more often, so
+            # parity alone drifted the corpus to 38% MT — below the frozen C3 bar).
+            if phases == 1 and banked > 0 and mt_banked < 0.5 * (banked + 1):
+                with open(REJECT_LOG, "a", encoding="utf-8") as f:
+                    f.write(json.dumps({"seed": seed - 1, "fam": fam, "steps": steps,
+                                        "reason": "mt-quota", "phases": 1,
+                                        "last": (messages[-1].get("content") or "")[:200]}) + "\n")
+                p(f"[c2] seed {seed}: mt-quota skip fam={fam} (mt={mt_banked}/{banked})")
+                continue
             normalize_messages(messages)
             row = {"id": banked, "fam": fam, "phases": phases, "n_steps": steps,
                    "messages": messages, "seed": seed - 1}
             with open(OUT, "a", encoding="utf-8") as f:
                 f.write(json.dumps(row) + "\n")
             banked += 1
+            mt_banked += 1 if phases == 2 else 0
+            existing.add(seed - 1)
             p(f"[c2] seed {seed}: BANK fam={fam} phases={phases} steps={steps} banked={banked} "
               f"({(time.time()-t0)/60:.1f}m)")
         else:
