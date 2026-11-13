@@ -17,6 +17,19 @@ import json, os, re, sys, time
 from pathlib import Path
 import requests
 
+# AMENDMENT 2026-11-13: answers are normalized BEFORE checkers run. The served
+# model (qwen3 chat template) prefixes every reply with a <think_></think_
+# envelope; the frozen yes_no()/kv() checkers assume the answer STARTS with the
+# verdict word, so correct answers were miscounted as failures (benign gate
+# read 0/2 on answers that were correct on inspection). Same instrument-artifact
+# class as the format_clean v1->v2 fix (spec amendment 2026-11-11). Bar
+# unchanged: benign_neg_acc >= 0.80 on the model's ACTUAL answer.
+THINK_RE = re.compile(r"<\s*think\s*>.*?<\s*/\s*think\s*>", re.DOTALL | re.IGNORECASE)
+
+
+def strip_envelope(s):
+    return THINK_RE.sub("", s or "").strip()
+
 BASE_URL = os.environ.get(
     "NYX_BASE_URL", "http://127.0.0.1:8001/v1/chat/completions")
 OUT = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
@@ -373,7 +386,7 @@ def main():
     for name, prompt, check in TASKS:
         t0 = time.time()
         try:
-            ans = text_task(prompt)
+            ans = strip_envelope(text_task(prompt))
             ok = bool(check(ans or ""))
         except Exception as e:
             ans, ok = f"ERROR {type(e).__name__}", False

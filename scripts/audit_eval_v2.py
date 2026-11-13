@@ -26,7 +26,12 @@ def ask(prompt):
                "temperature": 0.2, "max_tokens": 700, "stream": False}
     r = requests.post(BASE_URL, json=payload, timeout=600)
     r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"]
+    # AMENDMENT 2026-11-13: strip <think_> envelope before checkers (v1 parity);
+    # k4's positional yes-check ("yes" in al[:40]) was broken by the prefix.
+    import re as _re
+    _enveloped = _re.compile(r"<\s*think\s*>.*?<\s*/\s*think\s*>",
+                              _re.DOTALL | _re.IGNORECASE)
+    return _enveloped.sub("", r.json()["choices"][0]["message"]["content"] or "").strip()
 
 res, detail = [], []
 for k in range(1, 9):
