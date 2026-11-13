@@ -183,7 +183,7 @@ def main():
                 optim.step(); sched.step()
                 optim.zero_grad(set_to_none=True)
                 step += 1
-                if step % 25 == 0 or SMOKE:
+                if step % 10 == 0 or SMOKE:
                     print(f"[c2t] ep{ep+1} step {step}/{total} "
                           f"loss={out.loss.item():.3f} "
                           f"lr={sched.get_last_lr()[0]:.2e} "
