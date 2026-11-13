@@ -16,9 +16,12 @@ import uvicorn
 MODEL_DIR = Path(sys.argv[1] if len(sys.argv) > 1
                  else r"C:\Users\User\hf_models\spark-x2.6-1.7b")
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 8001
+# Optional argv[3]: PEFT adapter dir, loaded ON TOP of the base at serve time
+# (cycle-2 gate: adapter partial evaluated UNMERGED, per spec C6).
+ADAPTER = Path(sys.argv[3]) if len(sys.argv) > 3 else None
 # Report the SERVED model dir name, not a hardcoded base label — a stale
 # label caused a false identity alarm (2026-11-03 cron flag).
-MODEL_ID = MODEL_DIR.name
+MODEL_ID = MODEL_DIR.name + (f"+{ADAPTER.name}" if ADAPTER else "")
 
 # Wire tokens assembled from parts (kept out of literals above for safety).
 TC_O = "<" + "tool_call>"
@@ -41,6 +44,11 @@ def _load():
         str(MODEL_DIR), dtype=torch.bfloat16, device_map="cuda:0",
         trust_remote_code=True)
     _model.eval()
+    if ADAPTER:
+        from peft import PeftModel
+        _model = PeftModel.from_pretrained(_model, str(ADAPTER))
+        _model.eval()
+        print(f"[spark-server] adapter loaded: {ADAPTER.name}", flush=True)
     gc = _model.generation_config
     for attr in ("top_k", "temperature", "top_p"):
         v = getattr(gc, attr, None)
