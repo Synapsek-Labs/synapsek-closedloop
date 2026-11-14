@@ -18,6 +18,7 @@ NODE = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
 # preserve AST/tool-call capability while keeping the benign+MT gains. NO gate
 # changes — bars identical (composite >= base, MT >= 4/16, benign >= 80%).
 CYCLE = os.environ.get("CORE8B_CYCLE", "2")
+SBX = Path(os.environ.get("CYCLE2_SANDBOX", str(NODE / "cycle2_sbx")))
 SHARDS = int(os.environ.get("CYCLE2_SHARDS", "1"))
 SHARD = int(os.environ.get("CYCLE2_SHARD", "0"))
 TARGET = int(os.environ.get("CYCLE2_TARGET", "400"))
