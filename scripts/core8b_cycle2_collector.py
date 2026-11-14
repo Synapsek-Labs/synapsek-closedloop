@@ -10,7 +10,14 @@ import requests
 
 BASE_URL = os.environ.get("TEACHER_URL", "http://127.0.0.1:8002/v1/chat/completions")
 NODE = Path(r"C:\Users\User\synapsek-closedloop\runs\node\shinobi-1")
-SBX = Path(os.environ.get("CYCLE2_SANDBOX", str(NODE / "cycle2_sbx")))
+# CYCLE = cycle tag: 2 (default, cycle-2 corpus) or 3 (cycle-3: capability-
+# preserving mix amendment — keeps all 12 cycle-2 families, adds fam 12/13).
+# AMENDMENT 2026-11-14 (CYCLE2_CORPUS_SPEC.md, cycle-3 mix): after cycle-2
+# gate FAIL (benign PASS 100%, MT FAIL 18.75%, composite FAIL ~77.5 vs 79.8),
+# cycle-3 adds fam 12 (single-call precision) + fam 13 (multi-call replay) to
+# preserve AST/tool-call capability while keeping the benign+MT gains. NO gate
+# changes — bars identical (composite >= base, MT >= 4/16, benign >= 80%).
+CYCLE = os.environ.get("CORE8B_CYCLE", "2")
 SHARDS = int(os.environ.get("CYCLE2_SHARDS", "1"))
 SHARD = int(os.environ.get("CYCLE2_SHARD", "0"))
 TARGET = int(os.environ.get("CYCLE2_TARGET", "400"))
@@ -22,6 +29,9 @@ if SHARDS > 1:
 else:
     OUT = NODE / "work_core8b_cycle2.jsonl"
     REJECT_LOG = NODE / "cycle2_rejects.jsonl"
+if CYCLE == "3":
+    OUT = NODE / "work_core8b_cycle3.jsonl"
+    REJECT_LOG = NODE / "cycle3_rejects.jsonl"
 # Per-shard quota so the shards sum to TARGET (137/132/132 etc.).
 TARGET = TARGET // SHARDS + (1 if SHARD < TARGET % SHARDS else 0)
 MAX_TURNS = 14
@@ -172,10 +182,51 @@ def audit_pair(seed):
 def mk(seed):
     """Returns setup_cmds, task, followup(or None), verify2(or None), fam."""
     rng = random.Random(seed)
-    fam = seed % 12
+    # CYCLE-3 MIX (amendment 2026-11-14): 14 families = cycle-2's 12 +
+    # 12 single-call precision + 13 multi-call replay (capability-preserving).
+    # Both new fams are MT-eligible (followup built) so the 50% C3 quota holds.
+    fam = seed % 14 if CYCLE == "3" else seed % 12
     setup, task, followup, verify2 = [], "", None, None
     reg = rng.choice(["nsw", "vic", "qld"])
-    if fam == 0:  # CSV analytics (typed read/write)
+    if fam == 12:  # C3 cycle-3: single-call precision (pick ONE key, exact value)
+        n = rng.randint(3, 6)
+        items = {f"sku{100+i}": rng.randint(4, 40) for i in range(n)}
+        setup = [f"python -c \"open('stock.json','w').write({json.dumps(items)!r})\""]
+        pick = rng.choice(sorted(items))
+        task = (f"Read stock.json and write qty.txt containing ONLY the quantity "
+                f"of {pick} (just the number, nothing else).")
+        def verify():
+            try:
+                return open(SBX / "qty.txt").read().strip() == str(items[pick])
+            except Exception:
+                return False
+        followup = ("Now overwrite qty.txt with ONLY the number of distinct "
+                     "stock items in stock.json.")
+        def verify2():
+            try:
+                return open(SBX / "qty.txt").read().strip() == str(n)
+            except Exception:
+                return False
+    elif fam == 13:  # C3 cycle-3: multi-call replay (two independent reads, one turn)
+        a = {f"k{i}": rng.randint(1, 50) for i in range(rng.randint(2, 5))}
+        b = {f"m{i}": rng.randint(1, 50) for i in range(rng.randint(2, 5))}
+        setup = [f"python -c \"open('a.json','w').write({json.dumps(a)!r}); "
+                 f"open('b.json','w').write({json.dumps(b)!r})\""]
+        s = sum(a.values()) + sum(b.values())
+        task = ("Read a.json and b.json, then write total.txt with ONLY the sum of "
+                "all values in both files.")
+        def verify():
+            try:
+                return open(SBX / "total.txt").read().strip() == str(s)
+            except Exception:
+                return False
+        followup = "Now write count.txt with ONLY how many keys exist across both files."
+        def verify2():
+            try:
+                return open(SBX / "count.txt").read().strip() == str(len(a) + len(b))
+            except Exception:
+                return False
+    elif fam == 0:  # CSV analytics (typed read/write)
         data = csv_rows(rng.randint(8, 14), seed)
         setup = [f'python -c "open(\'sales.csv\',\'w\').write({data!r})"']
         task = (f"In sales.csv: compute TOTAL revenue (units*price over all rows) and the "

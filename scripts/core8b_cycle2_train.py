@@ -24,7 +24,10 @@ from peft import LoraConfig, PeftModel, get_peft_model
 
 REPO = Path(__file__).resolve().parents[1]
 NODE = REPO / "runs" / "node" / "shinobi-1"
-CORPUS = NODE / "work_core8b_cycle2.jsonl"
+# CYCLE tag: "2" (default) -> cycle-2 corpus/adapter names; "3" -> cycle-3
+# (amendment 2026-11-14: capability-preserving mix fam 12/13, same spec C6).
+CYCLE = os.environ.get("CORE8B_CYCLE", "2")
+CORPUS = NODE / ("work_core8b_cycle%s.jsonl" % CYCLE)
 BASE = Path(os.environ.get("CYCLE2_BASE", r"C:\Users\User\hf_models\qwen3-8b-normal"))
 OUT = Path(os.environ.get("CYCLE2_OUT", str(NODE / "cycle2_runs")))
 PAIRS_FILE = NODE / "cycle2_pairs.jsonl"
@@ -189,10 +192,10 @@ def main():
                           f"lr={sched.get_last_lr()[0]:.2e} "
                           f"({time.time()-t0:.0f}s)", flush=True)
                 if not SMOKE and step % 300 == 0:
-                    model.save_pretrained(str(OUT / f"ckpt_step{step}"),
+                    model.save_pretrained(str(OUT / f"ckpt_cycle{CYCLE}_step{step}"),
                                           safe_serialization=True)
 
-    name = "smoke_adapter" if SMOKE else "nyx-core-8b-cycle2-adapter"
+    name = "smoke_adapter" if SMOKE else f"nyx-core-8b-cycle{CYCLE}-adapter"
     model.save_pretrained(str(OUT / name), safe_serialization=True)
     tok.save_pretrained(str(OUT / name / "tokenizer"))
     print(f"[c2t] DONE {step} opt-steps -> {OUT / name} "
