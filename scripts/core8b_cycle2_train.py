@@ -28,9 +28,11 @@ NODE = REPO / "runs" / "node" / "shinobi-1"
 # (amendment 2026-11-14: capability-preserving mix fam 12/13, same spec C6).
 CYCLE = os.environ.get("CORE8B_CYCLE", "2")
 CORPUS = NODE / ("work_core8b_cycle%s.jsonl" % CYCLE)
+# C4 FIX 2026-11-16: pairs file must be PER-CYCLE — v1 reused cycle2_pairs.jsonl
+# (stale cycle-3 pairs would contaminate cycle-4 training silently).
+PAIRS_FILE = NODE / ("cycle%s_pairs.jsonl" % CYCLE)
 BASE = Path(os.environ.get("CYCLE2_BASE", r"C:\Users\User\hf_models\qwen3-8b-normal"))
 OUT = Path(os.environ.get("CYCLE2_OUT", str(NODE / "cycle2_runs")))
-PAIRS_FILE = NODE / "cycle2_pairs.jsonl"
 LR = float(os.environ.get("CYCLE2_LR", "5e-5"))        # spec C6 (frozen)
 EPOCHS = 2
 SEED = 7

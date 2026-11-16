@@ -33,6 +33,9 @@ else:
 if CYCLE == "3":
     OUT = NODE / "work_core8b_cycle3.jsonl"
     REJECT_LOG = NODE / "cycle3_rejects.jsonl"
+if CYCLE == "4":
+    OUT = NODE / "work_core8b_cycle4.jsonl"
+    REJECT_LOG = NODE / "cycle4_rejects.jsonl"
 # Per-shard quota so the shards sum to TARGET (137/132/132 etc.).
 TARGET = TARGET // SHARDS + (1 if SHARD < TARGET % SHARDS else 0)
 MAX_TURNS = 14
@@ -185,8 +188,17 @@ def mk(seed):
     rng = random.Random(seed)
     # CYCLE-3 MIX (amendment 2026-11-14): 14 families = cycle-2's 12 +
     # 12 single-call precision + 13 multi-call replay (capability-preserving).
-    # Both new fams are MT-eligible (followup built) so the 50% C3 quota holds.
-    fam = seed % 14 if CYCLE == "3" else seed % 12
+    # CYCLE-4 MIX (amendment 2026-11-16, gap-table-driven): 16 families =
+    # cycle-3's 14 + 14 parallel-call replay + 15 simple-args replay.
+    # Replay fams 12/13/14/15 = 4/16 = 25% of corpus (crowding-out protection).
+    # Both new fams MT-eligible (followup built) so the 50% MT quota holds.
+    # NO gate changes — bars identical (composite >= base, MT >= 4/16, benign >= 80%).
+    if CYCLE == "4":
+        fam = seed % 16
+    elif CYCLE == "3":
+        fam = seed % 14
+    else:
+        fam = seed % 12
     setup, task, followup, verify2 = [], "", None, None
     reg = rng.choice(["nsw", "vic", "qld"])
     if fam == 12:  # C3 cycle-3: single-call precision (pick ONE key, exact value)
@@ -225,6 +237,42 @@ def mk(seed):
         def verify2():
             try:
                 return open(SBX / "count.txt").read().strip() == str(len(a) + len(b))
+            except Exception:
+                return False
+    elif fam == 14:  # C4 cycle-4: parallel-call replay (two independent writes, ONE turn)
+        na, nb = rng.randint(3, 8), rng.randint(4, 12)
+        ca = "\n".join(f"alpha{i} beta" for i in range(na))
+        cb = " ".join(f"gamma{i}" for i in range(nb))
+        setup = [f"python -c \"open('a14.txt','w').write({ca!r}); open('b14.txt','w').write({cb!r})\""]
+        task = ("In ONE turn: write lines.txt containing ONLY the number of lines in "
+                "a14.txt, and words.txt containing ONLY the number of words in b14.txt.")
+        def verify():
+            try:
+                return (open(SBX / "lines.txt").read().strip() == str(na)
+                        and open(SBX / "words.txt").read().strip() == str(nb))
+            except Exception:
+                return False
+        followup = "Now write both.txt containing ONLY the sum of those two numbers."
+        def verify2():
+            try:
+                return open(SBX / "both.txt").read().strip() == str(na + nb)
+            except Exception:
+                return False
+    elif fam == 15:  # C4 cycle-4: simple-args replay (verbatim single write, exact args)
+        port = 8000 + rng.randint(1, 999)
+        host = f"10.0.{rng.randint(0, 255)}.{rng.randint(1, 254)}"
+        task = (f"Write cfg.txt with EXACTLY this content, on one line, nothing else: "
+                f"port={port} host={host} retries=3")
+        def verify():
+            try:
+                return open(SBX / "cfg.txt").read().strip() == f"port={port} host={host} retries=3"
+            except Exception:
+                return False
+        followup = ("Now rewrite cfg.txt with the same values but retries=5 instead of 3. "
+                    "One line, nothing else.")
+        def verify2():
+            try:
+                return open(SBX / "cfg.txt").read().strip() == f"port={port} host={host} retries=5"
             except Exception:
                 return False
     elif fam == 0:  # CSV analytics (typed read/write)
