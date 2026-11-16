@@ -258,18 +258,20 @@ def mk(seed):
                 return open(SBX / "both.txt").read().strip() == str(na + nb)
             except Exception:
                 return False
-    elif fam == 15:  # C4 cycle-4: simple-args replay (verbatim single write, exact args)
+    elif fam == 15:  # C4 cycle-4: simple-args replay (read params -> verbatim write; 2+ steps)
         port = 8000 + rng.randint(1, 999)
         host = f"10.0.{rng.randint(0, 255)}.{rng.randint(1, 254)}"
-        task = (f"Write cfg.txt with EXACTLY this content, on one line, nothing else: "
-                f"port={port} host={host} retries=3")
+        cfg = json.dumps({"port": port, "host": host, "retries": 3})
+        setup = [f"python -c \"open('params15.json','w').write({cfg!r})\""]
+        task = ("Read params15.json, then write cfg.txt with EXACTLY this content, on one "
+                "line, nothing else: port=<its port value> host=<its host value> retries=<its retries value>")
         def verify():
             try:
                 return open(SBX / "cfg.txt").read().strip() == f"port={port} host={host} retries=3"
             except Exception:
                 return False
-        followup = ("Now rewrite cfg.txt with the same values but retries=5 instead of 3. "
-                    "One line, nothing else.")
+        followup = ("Read params15.json again, then rewrite cfg.txt with the same values "
+                    "but retries=5 instead of 3. One line, nothing else.")
         def verify2():
             try:
                 return open(SBX / "cfg.txt").read().strip() == f"port={port} host={host} retries=5"
@@ -413,7 +415,9 @@ def mk(seed):
                         and open(SBX/"count_bak.txt").read().strip() == str(len(bak)))
             except Exception:
                 return False
-        followup = "Now delete the largest-numbered file_*.bak and rewrite count_bak.txt with the new count."
+        followup = ("In SEPARATE steps (one action per step): read the current count from "
+                    "count_bak.txt, then delete the largest-numbered file_*.bak, then rewrite "
+                    "count_bak.txt with the new count.")
         def verify2():
             try:
                 baks = sorted(SBX.glob("file_*.bak"), key=lambda p: int(p.stem.split("_")[1]))
