@@ -34,30 +34,43 @@ def _output_text(payload) -> str:
     return (out or "")[:MAX_RESULT_CHARS]
 
 
+def _read_lines(f):
+    """Yield text lines from .jsonl or .jsonl.zst (2026-11-19 amendment: zst support)."""
+    if f.suffix == ".zst":
+        import zstandard, io
+        raw = zstandard.ZstdDecompressor().stream_reader(open(f, "rb"))
+        buf = io.TextIOWrapper(raw, encoding="utf-8", errors="replace")
+        for line in buf:
+            yield line
+    else:
+        with open(f, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                yield line
+
+
 def extract_rows(sessions_dir: Path):
     rows = []
-    for f in sorted(sessions_dir.rglob("rollout-*.jsonl")):
+    for f in sorted(sessions_dir.rglob("rollout-*.jsonl*")):
         task, tool_seq, results = None, [], []
         try:
-            with open(f, encoding="utf-8", errors="replace") as fh:
-                for line in fh:
-                    try:
-                        d = json.loads(line)
-                    except Exception:
-                        continue
-                    p = d.get("payload", {})
-                    t = p.get("type", "")
-                    if t == "user_message" or (t == "message" and p.get("role") == "user"):
-                        if task is None:
-                            txt = _user_text(p)
-                            if txt and not txt.startswith("/") and len(txt) > 8:
-                                task = txt
-                        # env-only first user turns are boilerplate; later user turns
-                        # carry the real task
-                    elif t in TOOL_TYPES:
-                        tool_seq.append({"name": p.get("name", "tool"),
-                                         "arguments": str(p.get("input", ""))[:MAX_RESULT_CHARS]})
-                    elif t in ("custom_tool_call_output", "function_call_output"):
+            for line in _read_lines(f):
+                try:
+                    d = json.loads(line)
+                except Exception:
+                    continue
+                p = d.get("payload", {})
+                t = p.get("type", "")
+                if t == "user_message" or (t == "message" and p.get("role") == "user"):
+                    if task is None:
+                        txt = _user_text(p)
+                        if txt and not txt.startswith("/") and len(txt) > 8:
+                            task = txt
+                    # env-only first user turns are boilerplate; later user turns
+                    # carry the real task
+                elif t in TOOL_TYPES:
+                    tool_seq.append({"name": p.get("name", "tool"),
+                                     "arguments": str(p.get("input", ""))[:MAX_RESULT_CHARS]})
+                elif t in ("custom_tool_call_output", "function_call_output"):
                         r = _output_text(p)
                         if r:
                             results.append(r)
